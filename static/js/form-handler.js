@@ -5,8 +5,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const resumptionDate = document.getElementById("resumptionDate");
   const totalDays = document.getElementById("totalDays");
 
+  // Helper function for consistent PetroData styling
+  const toast = (icon, title, text) => {
+    return Swal.fire({
+      icon: icon,
+      title: title,
+      text: text,
+      confirmButtonColor: icon === "success" ? "#00e676" : "#ff4d4d",
+    });
+  };
+
   // 2. AUTH CHECK & AUTO-FILL
-  // Pull data saved during Signup/Login from localStorage
   const savedName = localStorage.getItem("userName");
   const savedEmail = localStorage.getItem("userEmail");
 
@@ -14,12 +23,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const staffNameInput = document.getElementById("staffName");
     if (staffNameInput) {
       staffNameInput.value = savedName;
-      staffNameInput.readOnly = true; // Protect official name
+      staffNameInput.readOnly = true;
     }
   } else {
-    // Guard: If no user is found in storage, send them back to login
-    alert("Session not found. Please login first.");
-    window.location.href = "login.html";
+    // Replaced local alert with SweetAlert2
+    Swal.fire({
+      icon: "warning",
+      title: "Session Expired",
+      text: "Please login to access the portal.",
+      confirmButtonColor: "#ff4d4d",
+    }).then(() => {
+      window.location.href = "login.html";
+    });
     return;
   }
 
@@ -29,20 +44,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const start = new Date(startDate.value);
       const end = new Date(resumptionDate.value);
 
-      // Calculate difference in milliseconds
       const diff = end - start;
-      // Convert to days
       const days = diff / (1000 * 60 * 60 * 24);
 
       if (days > 0) {
         totalDays.value = `${days} Working Days`;
+      } else if (days === 0) {
+        totalDays.value = "1 Working Day";
       } else {
         totalDays.value = "Invalid Dates";
       }
     }
   }
 
-  // Listen for date changes
   if (startDate && resumptionDate) {
     startDate.addEventListener("change", updateDays);
     resumptionDate.addEventListener("change", updateDays);
@@ -53,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
     leaveForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Gather all form data into a JSON object
       const leaveRequestData = {
         staff_name: document.getElementById("staffName").value,
         staff_no: document.getElementById("staffNo").value,
@@ -65,35 +78,42 @@ document.addEventListener("DOMContentLoaded", () => {
         relief_staff: document.getElementById("reliefStaff").value,
         contact_address: document.getElementById("contactAddress").value,
         manager_email: document.getElementById("managerEmail").value,
-        status: "Pending", // Default status
+        status: "Pending",
       };
 
       try {
-        // Send the data to your Go API endpoint
         const response = await fetch("/api/leave/submit", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(leaveRequestData),
         });
 
         if (response.ok) {
           const result = await response.json();
-          alert("Success: " + result.message);
 
-          // Optional: Reset form or redirect to a 'Success' page
-          leaveForm.reset();
-          // Keep the name filled after reset
-          document.getElementById("staffName").value = savedName;
+          // Replaced local alert with SweetAlert2 success
+          Swal.fire({
+            icon: "success",
+            title: "Request Submitted",
+            text:
+              result.message ||
+              "Your leave request has been sent to your manager.",
+            confirmButtonColor: "#00e676",
+          }).then(() => {
+            leaveForm.reset();
+            // Restore auto-filled name after reset
+            document.getElementById("staffName").value = savedName;
+          });
         } else {
           const errorText = await response.text();
-          alert("Submission Failed: " + errorText);
+          toast("error", "Submission Failed", errorText);
         }
       } catch (err) {
         console.error("Submission Error:", err);
-        alert(
-          "Could not connect to the server.",
+        toast(
+          "error",
+          "Server Error",
+          "Could not connect to the PetroData server.",
         );
       }
     });

@@ -12,22 +12,31 @@ type User struct {
 }
 
 type LeaveRequest struct {
-	ID              uint      `gorm:"primaryKey" json:"id"`
-	StaffName       string    `json:"staff_name"`
-	StaffNo         string    `json:"staff_no"`
-	Designation     string    `json:"designation"`
-	Department      string    `json:"department"`
-	LeaveType       string    `json:"leave_type"`
-	StartDate       string    `json:"start_date"`
-	ResumptionDate  string    `json:"resumption_date"`
-	ReliefStaff     string    `json:"relief_staff"`
-	ContactAddress  string    `json:"contact_address"`
-	ManagerEmail    string    `json:"manager_email"`
-	Status          string    `json:"status"`
-	ManagerApproved bool      `json:"manager_approved"`
-	HRApproved      bool      `json:"hr_approved"`
-	MDApproved      bool      `json:"md_approved"`
-	CreatedAt       time.Time `json:"created_at"`
+	ID             uint   `gorm:"primaryKey" json:"id"`
+	StaffName      string `json:"staff_name"`
+	StaffNo        string `json:"staff_no"`
+	Designation    string `json:"designation"`
+	Department     string `json:"department"`
+	LeaveType      string `json:"leave_type"`
+	StartDate      string `json:"start_date"`
+	ResumptionDate string `json:"resumption_date"`
+	// Added this to capture the calculated days from your UI
+	TotalDays      int    `json:"total_days"`
+	ReliefStaff    string `json:"relief_staff"`
+	ContactAddress string `json:"contact_address"`
+	ManagerEmail   string `json:"manager_email"`
+
+	// Status management
+	Status          string `gorm:"default:'Pending'" json:"status"`
+	ManagerApproved bool   `gorm:"default:false" json:"manager_approved"`
+	HRApproved      bool   `gorm:"default:false" json:"hr_approved"`
+	MDApproved      bool   `gorm:"default:false" json:"md_approved"`
+
+	// The "Secret Key" for the Manager's Link
+	// We add an index because the backend will search by this token often
+	RequestToken string `gorm:"uniqueIndex" json:"request_token"`
+
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ApprovalAction struct {

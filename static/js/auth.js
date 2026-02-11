@@ -3,6 +3,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const logoutBtn = document.getElementById("logoutBtn");
 
+  // Helper function for consistent PetroData styling
+  const toast = (icon, title, text) => {
+    return Swal.fire({
+      icon: icon,
+      title: title,
+      text: text,
+      confirmButtonColor: icon === "success" ? "#00e676" : "#ff4d4d",
+    });
+  };
+
   // ==========================================
   // 1. SIGNUP LOGIC
   // ==========================================
@@ -10,36 +20,38 @@ document.addEventListener("DOMContentLoaded", () => {
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Grab all inputs from the UI
-      const fullName = document.getElementById("fullName").value;
-      const email = document.getElementById("signupEmail").value;
-      const phoneNumber = document.getElementById("phoneNumber").value;
-      const password = document.getElementById("signupPass").value;
+      const elName = document.getElementById("fullName");
+      const elEmail = document.getElementById("signupEmail");
+      const elPhone = document.getElementById("phone");
+      const elPass = document.getElementById("signupPass");
 
-      // --- Frontend Validation ---
-      // Requirement: Must be a company email
-      if (!email.endsWith("@petrodata.net")) {
-        alert("Access Denied: You must use a @petrodata.net email address.");
-        return;
-      }
-
-      // Requirement: Strong Password Check
-      const strongRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
-      if (!strongRegex.test(password)) {
-        alert(
-          "Password too weak! Requirements: 8+ characters, Uppercase, Number, and Symbol.",
+      if (!elName || !elEmail || !elPhone || !elPass) {
+        toast(
+          "error",
+          "System Error",
+          "Input IDs do not match HTML. Check console.",
         );
         return;
       }
 
-      // --- API Request ---
+      const fullName = elName.value;
+      const email = elEmail.value;
+      const phoneNumber = elPhone.value;
+      const password = elPass.value;
+
+      if (!email.endsWith("@petrodata.net")) {
+        toast(
+          "warning",
+          "Access Denied",
+          "You must use a @petrodata.net email address.",
+        );
+        return;
+      }
+
       try {
         const response = await fetch("/api/signup", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             full_name: fullName,
             email: email,
@@ -49,20 +61,31 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (response.ok) {
-          // Store details immediately so they don't have to login after signing up
           localStorage.setItem("userName", fullName);
           localStorage.setItem("userEmail", email);
 
-          alert("Registration Successful!");
-          // Redirect straight to the leave form
-          window.location.href = "leave-form.html";
+          Swal.fire({
+            icon: "success",
+            title: "Welcome aboard!",
+            text: "Registration successful for " + fullName,
+            confirmButtonColor: "#00e676",
+          }).then(() => {
+            window.location.href = "leave-form.html";
+          });
         } else {
-          const errorData = await response.text();
-          alert("Signup Failed: " + errorData);
+          const errorData = await response.json();
+          toast(
+            "error",
+            "Signup Failed",
+            errorData.error || "User already exists or data is invalid.",
+          );
         }
       } catch (err) {
-        console.error("Signup Error:", err);
-        alert("Server connection error. Please ensure the backend is running.");
+        toast(
+          "error",
+          "Connection Error",
+          "The server is unreachable. Please check your connection.",
+        );
       }
     });
   }
@@ -77,42 +100,45 @@ document.addEventListener("DOMContentLoaded", () => {
       const email = document.getElementById("loginEmail").value;
       const password = document.getElementById("loginPass").value;
 
-      // --- Frontend Validation ---
       if (!email.endsWith("@petrodata.net")) {
-        alert("Please use your company email (@petrodata.net)");
+        toast(
+          "warning",
+          "Invalid Domain",
+          "Please use your company email (@petrodata.net)",
+        );
         return;
       }
 
-      // --- API Request ---
       try {
         const response = await fetch("/api/login", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, password: password }),
         });
 
         if (response.ok) {
-          // Parse the response to get the user's Full Name from the database
           const result = await response.json();
-
-          // Save to LocalStorage for use in the leave form
-          localStorage.setItem("userName", result.user);
+          localStorage.setItem("userName", result.full_name);
           localStorage.setItem("userEmail", email);
 
-          console.log("Login Successful for:", result.user);
-          window.location.href = "leave-form.html";
+          Swal.fire({
+            icon: "success",
+            title: "Login Successful",
+            text: "Redirecting to Leave Portal...",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = "leave-form.html";
+          });
         } else {
-          const errorMsg = await response.text();
-          alert("Login Failed: " + (errorMsg || "Invalid credentials"));
+          toast("error", "Access Denied", "Invalid email or password.");
         }
       } catch (err) {
-        console.error("Login Error:", err);
-        alert("Server connection error.");
+        toast(
+          "error",
+          "Server Error",
+          "Could not connect to the login service.",
+        );
       }
     });
   }
@@ -124,14 +150,21 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
 
-      // Clear the session data
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
-
-      console.log("User logged out successfully.");
-
-      // Redirect to login page
-      window.location.href = "login.html";
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You will be signed out of the portal.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#ff4d4d",
+        cancelButtonColor: "#aaa",
+        confirmButtonText: "Yes, Sign Out",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          localStorage.removeItem("userName");
+          localStorage.removeItem("userEmail");
+          window.location.href = "login.html";
+        }
+      });
     });
   }
 });
@@ -147,14 +180,11 @@ function setupPasswordToggle(toggleId, inputId) {
     toggleIcon.addEventListener("click", function () {
       const isPassword = passwordInput.getAttribute("type") === "password";
       passwordInput.setAttribute("type", isPassword ? "text" : "password");
-
-      // Toggle the FontAwesome icon classes
       this.classList.toggle("fa-eye");
       this.classList.toggle("fa-eye-slash");
     });
   }
 }
 
-// Initialize toggles for both pages
 setupPasswordToggle("toggleSignupPass", "signupPass");
 setupPasswordToggle("toggleLoginPass", "loginPass");
