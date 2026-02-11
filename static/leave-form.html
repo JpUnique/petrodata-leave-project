@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leave Portal | PetroData</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/form-style.css" />
+  </head>
+  <body>
+    <div class="background-overlay"></div>
+
+    <div class="form-wrapper">
+      <div class="form-card">
+        <div class="accent-bar"></div>
+
+        <header class="form-header">
+          <div class="branding-center">
+            <img
+              src="assets/newlogo.png"
+              alt="PetroData Logo"
+              class="form-logo"
+            />
+            <h1>Leave Request Portal</h1>
+            <p>Ensure all details match your official records</p>
+          </div>
+        </header>
+
+        <form id="leaveForm">
+          <div class="form-section">
+            <h3><i class="fas fa-user-shield"></i> Staff Information</h3>
+            <div class="grid-row">
+              <div class="input-group">
+                <label for="staffName">Staff Name</label>
+                <input
+                  type="text"
+                  id="staffName"
+                  placeholder="Loading name..."
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <label for="staffNo">Staff Number</label>
+                <input
+                  type="text"
+                  id="staffNo"
+                  placeholder="e.g. 0084"
+                  required
+                />
+              </div>
+            </div>
+            <div class="grid-row">
+              <div class="input-group">
+                <label for="designation">Designation</label>
+                <input
+                  type="text"
+                  id="designation"
+                  placeholder="Geophysicist"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <label for="department">Department</label>
+                <input
+                  type="text"
+                  id="department"
+                  placeholder="Operations Lagos"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3><i class="fas fa-calendar-check"></i> Leave Particulars</h3>
+            <div class="grid-row">
+              <div class="input-group">
+                <label for="leaveType">Type of Leave</label>
+                <select id="leaveType" required>
+                  <option value="Annual">Annual Leave</option>
+                  <option value="Sick">Sick Leave</option>
+                  <option value="Maternity">Maternity/Paternity</option>
+                  <option value="Compassionate">Compassionate</option>
+                  <option value="Casual">Casual Leave</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="reliefStaff">Relief Staff Name</label>
+                <input
+                  type="text"
+                  id="reliefStaff"
+                  placeholder="Full Name"
+                  required
+                />
+              </div>
+            </div>
+            <div class="grid-row">
+              <div class="input-group">
+                <label for="startDate">Commencement Date</label>
+                <input type="date" id="startDate" required />
+              </div>
+              <div class="input-group">
+                <label for="resumptionDate">Resumption Date</label>
+                <input type="date" id="resumptionDate" required />
+              </div>
+            </div>
+            <div class="input-group full-width">
+              <label for="totalDays">Total Days This Vacation</label>
+              <input
+                type="text"
+                id="totalDays"
+                placeholder="Automatically calculated..."
+                readonly
+              />
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3><i class="fas fa-map-marker-alt"></i> Contact Details</h3>
+            <div class="input-group full-width">
+              <label for="contactAddress">Contact Address while on Leave</label>
+              <input
+                type="text"
+                id="contactAddress"
+                placeholder="Street, City, State"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="workflow-card">
+            <div class="workflow-content">
+              <h3><i class="fas fa-paper-plane"></i> Approval Workflow</h3>
+              <p>
+                Submit this request to your Line Manager for digital approval.
+              </p>
+              <div class="input-group">
+                <label for="managerEmail">Manager Email</label>
+                <div class="email-input-wrapper">
+                  <i class="fas fa-user-check"></i>
+                  <input
+                    type="email"
+                    id="managerEmail"
+                    placeholder="manager@petrodata.net"
+                    required
+                  />
+                  <button type="submit" class="btn-inline-send">
+                    Send Request <i class="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div class="footer-actions">
+          <hr />
+          <div class="logout-wrapper">
+            <p>Finished with your request?</p>
+            <button id="logoutBtn" class="btn-logout">
+              <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/form-handler.js"></script>
+  </body>
+</html>

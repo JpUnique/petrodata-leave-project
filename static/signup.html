@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register | PetroData Leave Portal</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/auth.css" />
+  </head>
+  <body>
+    <div class="background-overlay"></div>
+
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="accent-bar"></div>
+
+        <div class="logo-section">
+          <img
+            src="assets/newlogo.png"
+            alt="PetroData Logo"
+            class="main-logo"
+          />
+          <h1>Leave Registration</h1>
+          <p>Create your account to access leave requests</p>
+        </div>
+
+        <form id="signupForm" class="stylish-form">
+          <div class="input-wrapper">
+            <i class="fas fa-user"></i>
+            <input type="text" id="fullName" placeholder="Full Name" required />
+          </div>
+
+          <div class="input-wrapper">
+            <i class="fas fa-envelope"></i>
+            <input
+              type="email"
+              id="signupEmail"
+              placeholder="name@petrodata.net"
+              required
+            />
+          </div>
+
+          <div class="input-wrapper">
+            <i class="fas fa-phone"></i>
+            <input
+              type="tel"
+              id="phone"
+              placeholder="Phone Number (e.g. 080...)"
+              required
+            />
+          </div>
+
+          <div class="input-wrapper">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              id="signupPass"
+              placeholder="Strong Password"
+              autocomplete="new-password"
+              required
+            />
+            <i class="fas fa-eye toggle-password" id="toggleSignupPass"></i>
+          </div>
+
+          <small class="password-hint"
+            >Must include Uppercase, Number & Symbol.</small
+          >
+
+          <button type="submit" class="btn-gradient btn-signup">
+            Create Account <i class="fas fa-user-plus"></i>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          Already have an account? <a href="login.html">Sign In</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+  </body>
+</html>

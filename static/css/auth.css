@@ -1,0 +1,196 @@
+:root {
+  --pd-red: #d32f2f;
+  --pd-green: #2e7d32;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url("https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=2000")
+    no-repeat center center/cover;
+  overflow: hidden;
+}
+
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.auth-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+}
+
+.auth-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.6s ease-out;
+}
+
+.accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, var(--pd-red), var(--pd-green));
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.main-logo {
+  width: 180px;
+  margin-bottom: 15px;
+}
+.logo-section h1 {
+  font-size: 1.8rem;
+  color: #333;
+}
+.logo-section p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Consolidated Input Styling */
+.input-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+/* Left Icons (Lock/Envelope/User) */
+.input-wrapper > i:not(.toggle-password) {
+  position: absolute;
+  left: 15px;
+  color: #888;
+  z-index: 5;
+  /* CRITICAL: This allows clicking through the icon into the input */
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  width: 100%;
+  /* Padding: Top, Right (Eye), Bottom, Left (Lock) */
+  padding: 12px 45px 12px 40px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: 0.3s;
+  background: #fff;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--pd-green);
+  box-shadow: 0 0 8px rgba(46, 125, 50, 0.2);
+}
+
+/* The Eye Icon (Right Side) */
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+  color: #888;
+  z-index: 10;
+  padding: 5px;
+}
+
+.toggle-password:hover {
+  color: var(--pd-green);
+}
+
+/* Button Styling */
+.btn-gradient {
+  width: 100%;
+  padding: 14px;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+}
+
+/* Page Specific Button Colors */
+.btn-login {
+  background: linear-gradient(135deg, var(--pd-green) 0%, #1b5e20 100%);
+}
+.btn-login:hover {
+  box-shadow: 0 5px 15px rgba(46, 125, 50, 0.4);
+}
+
+.btn-signup {
+  background: linear-gradient(135deg, var(--pd-red) 0%, #b71c1c 100%);
+  margin-top: 15px;
+}
+.btn-signup:hover {
+  box-shadow: 0 5px 15px rgba(211, 47, 47, 0.4);
+}
+
+.password-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  margin: -10px 0 15px 5px;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.auth-footer a {
+  color: var(--pd-green);
+  text-decoration: none;
+  font-weight: 600;
+}
