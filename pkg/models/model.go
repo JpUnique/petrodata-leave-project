@@ -20,25 +20,34 @@ type LeaveRequest struct {
 	LeaveType      string `json:"leave_type"`
 	StartDate      string `json:"start_date"`
 	ResumptionDate string `json:"resumption_date"`
-	// Added this to capture the calculated days from your UI
 	TotalDays      int    `json:"total_days"`
 	ReliefStaff    string `json:"relief_staff"`
 	ContactAddress string `json:"contact_address"`
-	ManagerEmail   string `json:"manager_email"`
 
-	// Status management
-	Status          string `gorm:"default:'Pending'" json:"status"`
-	ManagerApproved bool   `gorm:"default:false" json:"manager_approved"`
-	HRApproved      bool   `gorm:"default:false" json:"hr_approved"`
-	MDApproved      bool   `gorm:"default:false" json:"md_approved"`
+	// Workflow Emails
+	ManagerEmail string `json:"manager_email"`
+	HREmail      string `json:"hr_email"` // Added: To store who the manager forwarded to
+	MDEmail      string `json:"md_email"` // Added: To store who HR forwarded to
 
-	// The "Secret Key" for the Manager's Link
-	// We add an index because the backend will search by this token often
-	RequestToken string `gorm:"uniqueIndex" json:"request_token"`
+	// Status & Logic
+	Status string `gorm:"default:'Pending'" json:"status"`
+
+	// Specific Decisions (To show in UI)
+	ManagerDecision string `json:"manager_decision"` // Will store "Approved" or "Rejected"
+	HRDecision      string `json:"hr_decision"`      // Will store "Approved" or "Rejected"
+
+	// Booleans for quick checks
+	ManagerApproved bool `gorm:"default:false" json:"manager_approved"`
+	HRApproved      bool `gorm:"default:false" json:"hr_approved"`
+	MDApproved      bool `gorm:"default:false" json:"md_approved"`
+
+	// Security Tokens for the Links
+	RequestToken string `gorm:"uniqueIndex" json:"request_token"` // Manager's link
+	HRToken      string `gorm:"uniqueIndex" json:"hr_token"`      // HR's link
+	MDToken      string `gorm:"uniqueIndex" json:"md_token"`      // MD's link (Added)
 
 	CreatedAt time.Time `json:"created_at"`
 }
-
 type ApprovalAction struct {
 	ID         uint      `gorm:"primaryKey" json:"id"`
 	RequestID  uint      `json:"request_id"`

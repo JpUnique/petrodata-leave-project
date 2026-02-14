@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
+	email "github.com/JpUnique/petrodata-leave-project/pkg/emailer"
 	"github.com/JpUnique/petrodata-leave-project/pkg/models"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -109,16 +110,10 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 	approvalURL := fmt.Sprintf("http://localhost:8080/approve.html?token=%s", leaveReq.RequestToken)
 
 	// 6. Asynchronous Background Task (Email)
-	go func(req models.LeaveRequest, url string) {
-		log.Printf("[WORKFLOW] Triggering approval email to Manager: %s", req.ManagerEmail)
-
-		// In a real scenario, you'd call: utils.SendApprovalEmail(req.ManagerEmail, req.StaffName, url)
-		// For now, we simulate success in the logs
-		log.Printf("[SUCCESS] Approval link generated: %s", url)
-	}(leaveReq, approvalURL)
-
-	// 7. Standard Success Response
-	log.Printf("[INFO] Leave request %s successfully accepted", leaveReq.RequestToken)
+	go func(mEmail, sName, url string) {
+		email.SendApprovalEmail(mEmail, sName, url)
+		log.Printf("[SUCCESS] Mock email logic completed for %s", mEmail)
+	}(leaveReq.ManagerEmail, leaveReq.StaffName, approvalURL)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
@@ -170,4 +165,235 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"message": "Login successful",
 		"user":    user.FullName,
 	})
+}
+
+// GetLeaveRequestByToken fetches a single request using the unique UUID token
+func GetLeaveRequestByToken(w http.ResponseWriter, r *http.Request) {
+	// 1. Validate Method (We use GET because we are fetching data)
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. Extract the token from the URL query string
+	// Example: /api/leave/details?token=123-abc
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		log.Printf("[WARN] Attempted access to details without token")
+		http.Error(w, "token is required", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Query the database for the Leave Request by Token ONLY
+	var leaveReq models.LeaveRequest
+	err := database.DB.Where("request_token = ?", token).First(&leaveReq).Error
+	if err != nil {
+		// This means the token doesn't exist in our records
+		log.Printf("[ERROR] Invalid token used: %s", token)
+		http.Error(w, "invalid or expired link", http.StatusNotFound)
+		return
+	}
+
+	// 4. Return success response with the full record
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(leaveReq)
+}
+
+func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var input struct {
+		Token  string `json:"token"`
+		Status string `json:"status"` // "Approved" or "Rejected"
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	var leaveReq models.LeaveRequest
+	// 1. Find the request using the Manager's token
+	if err := database.DB.Where("request_token = ?", input.Token).First(&leaveReq).Error; err != nil {
+		http.Error(w, "Request not found", http.StatusNotFound)
+		return
+	}
+
+	// 2. Update Status
+	leaveReq.Status = input.Status
+	if input.Status == "Approved" {
+		leaveReq.ManagerApproved = true
+		// 3. Generate NEW token for HR
+		leaveReq.HRToken = uuid.New().String()
+	}
+
+	// 4. Save Changes
+	database.DB.Save(&leaveReq)
+
+	// 5. If Approved, "Send" to HR (Terminal Mock)
+	if leaveReq.Status == "Approved" {
+		hrURL := fmt.Sprintf("http://localhost:8080/approve_hr.html?token=%s", leaveReq.HRToken)
+		go func() {
+			fmt.Println("\n--- 📧 NOTIFICATION TO HR (MOCK) ---")
+			fmt.Printf("SUBJECT: HR Approval Required for %s\n", leaveReq.StaffName)
+			fmt.Printf("MANAGER DECISION: Approved\n")
+			fmt.Printf("HR LINK: %s\n", hrURL)
+			fmt.Println("------------------------------------")
+		}()
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Action recorded successfully"})
+}
+
+func GetLeaveRequestByHRToken(w http.ResponseWriter, r *http.Request) {
+	// 1. Validate Method
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. Extract the HR token from the URL
+	// Example: /api/leave/hr-details?token=hr-uuid-here
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		log.Printf("[WARN] Unauthorized HR access attempt without token")
+		http.Error(w, "hr token is required", http.StatusBadRequest)
+		return
+	}
+
+	var leaveReq models.LeaveRequest
+
+	// 3. Query the database for the HR Token ONLY
+	// We check the hr_token column here!
+	err := database.DB.Where("hr_token = ?", token).First(&leaveReq).Error
+	if err != nil {
+		log.Printf("[ERROR] Invalid HR token: %s", token)
+		http.Error(w, "invalid or expired HR link", http.StatusNotFound)
+		return
+	}
+
+	// 4. Return the data to the HR UI
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(leaveReq)
+}
+
+func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var input struct {
+		Token   string `json:"token"`
+		Status  string `json:"status"`   // HR's choice: "Approved" or "Rejected"
+		MDEmail string `json:"md_email"` // The MD's email HR enters
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var leaveReq models.LeaveRequest
+	// Find the request using HR's token
+	if err := database.DB.Where("hr_token = ?", input.Token).First(&leaveReq).Error; err != nil {
+		http.Error(w, "Request not found", http.StatusNotFound)
+		return
+	}
+
+	// Record HR's decision
+	leaveReq.HRDecision = input.Status
+	leaveReq.MDEmail = input.MDEmail
+	leaveReq.HRApproved = (input.Status == "Approved")
+
+	// GENERATE MD TOKEN (The chain continues to the final level)
+	leaveReq.MDToken = uuid.New().String()
+	leaveReq.Status = "Pending MD Review"
+
+	database.DB.Save(&leaveReq)
+
+	// Mock Email to MD
+	mdURL := fmt.Sprintf("http://localhost:8080/approve_md.html?token=%s", leaveReq.MDToken)
+	fmt.Printf("\n--- 📧 FORWARDING TO MD: %s ---\n", leaveReq.MDEmail)
+	fmt.Printf("HR DECISION: %s\n", leaveReq.HRDecision)
+	fmt.Printf("MD ACCESS LINK: %s\n", mdURL)
+	fmt.Println("------------------------------------")
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Forwarded to MD successfully"})
+}
+
+func HandleMDAction(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    var input struct {
+        Token  string `json:"token"`
+        Status string `json:"status"` // MD's choice: "Approved" or "Rejected"
+    }
+
+    if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    var leaveReq models.LeaveRequest
+    // Find the request using the unique MD Token
+    if err := database.DB.Where("md_token = ?", input.Token).First(&leaveReq).Error; err != nil {
+        http.Error(w, "Request not found or invalid MD token", http.StatusNotFound)
+        return
+    }
+
+    // 1. Record MD's Decision
+    // We update the main 'Status' field here because this is the final authority
+    leaveReq.Status = input.Status
+    leaveReq.MDApproved = (input.Status == "Approved")
+
+    // 2. Save the final state to the Database
+    if err := database.DB.Save(&leaveReq).Error; err != nil {
+        http.Error(w, "Failed to finalize request", http.StatusInternalServerError)
+        return
+    }
+
+    // 3. Final Logging (Notification simulation)
+    fmt.Printf("\n--- 🏁 WORKFLOW FINALIZED ---")
+    fmt.Printf("\nStaff: %s", leaveReq.StaffName)
+    fmt.Printf("\nFinal Status: %s", leaveReq.Status)
+    fmt.Printf("\nManager: %s | HR: %s | MD: %s",
+        leaveReq.ManagerDecision, leaveReq.HRDecision, leaveReq.Status)
+    fmt.Printf("\n-----------------------------\n")
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{
+        "message": "Leave request has been successfully finalized.",
+        "status":  leaveReq.Status,
+    })
+}
+
+func GetLeaveRequestByMDToken(w http.ResponseWriter, r *http.Request) {
+    // 1. Get the token from the URL query string (?token=...)
+    token := r.URL.Query().Get("token")
+    if token == "" {
+        http.Error(w, "Token is required", http.StatusBadRequest)
+        return
+    }
+
+    var leaveReq models.LeaveRequest
+
+    // 2. Query the database for the record matching the MD Token
+    if err := database.DB.Where("md_token = ?", token).First(&leaveReq).Error; err != nil {
+        http.Error(w, "Invalid or expired MD access link", http.StatusNotFound)
+        return
+    }
+
+    // 3. Return the full data (including ManagerDecision and HRDecision) as JSON
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(leaveReq); err != nil {
+        http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+    }
 }

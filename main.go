@@ -12,7 +12,7 @@ import (
 
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
 	"github.com/JpUnique/petrodata-leave-project/pkg/handlers"
-	"github.com/joho/godotenv" // Added this
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -56,6 +56,12 @@ func main() {
 	mux.HandleFunc("/api/signup", handlers.Signup)
 	mux.HandleFunc("/api/login", handlers.Login)
 	mux.HandleFunc("/api/leave/submit", handlers.SubmitLeaveRequest)
+	mux.HandleFunc("/api/leave/details", handlers.GetLeaveRequestByToken)
+	mux.HandleFunc("/api/leave/action", handlers.HandleLineManagerAction)
+	mux.HandleFunc("/api/leave/hr-details", handlers.GetLeaveRequestByHRToken)
+	mux.HandleFunc("/api/leave/hr-action", handlers.HandleHRManagerAction)
+	mux.HandleFunc("/api/leave/md-details", handlers.GetLeaveRequestByMDToken) 
+	mux.HandleFunc("/api/leave/md-action", handlers.HandleMDAction)
 
 	// 5. Server Configuration
 	srv := &http.Server{

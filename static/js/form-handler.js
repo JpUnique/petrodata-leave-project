@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
       icon: icon,
       title: title,
       text: text,
-      confirmButtonColor: icon === "success" ? "#00e676" : "#ff4d4d",
+      confirmButtonColor: icon === 'success' ? '#00e676' : '#ff4d4d',
     });
   };
 
@@ -28,10 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     // Replaced local alert with SweetAlert2
     Swal.fire({
-      icon: "warning",
-      title: "Session Expired",
-      text: "Please login to access the portal.",
-      confirmButtonColor: "#ff4d4d",
+      icon: 'warning',
+      title: 'Session Expired',
+      text: 'Please login to access the portal.',
+      confirmButtonColor: '#ff4d4d'
     }).then(() => {
       window.location.href = "login.html";
     });
@@ -67,6 +67,12 @@ document.addEventListener("DOMContentLoaded", () => {
     leaveForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      //calculate total days before submission
+      const start = new Date(startDate.value);
+      const end = new Date(resumptionDate.value);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
       const leaveRequestData = {
         staff_name: document.getElementById("staffName").value,
         staff_no: document.getElementById("staffNo").value,
@@ -75,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         leave_type: document.getElementById("leaveType").value,
         start_date: startDate.value,
         resumption_date: resumptionDate.value,
+        total_days: diffDays > 0 ? diffDays : 1,
         relief_staff: document.getElementById("reliefStaff").value,
         contact_address: document.getElementById("contactAddress").value,
         manager_email: document.getElementById("managerEmail").value,
@@ -93,28 +100,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Replaced local alert with SweetAlert2 success
           Swal.fire({
-            icon: "success",
-            title: "Request Submitted",
-            text:
-              result.message ||
-              "Your leave request has been sent to your manager.",
-            confirmButtonColor: "#00e676",
+            icon: 'success',
+            title: 'Request Submitted',
+            text: result.message || 'Your leave request has been sent to your manager.',
+            confirmButtonColor: '#00e676'
           }).then(() => {
             leaveForm.reset();
             // Restore auto-filled name after reset
             document.getElementById("staffName").value = savedName;
           });
+
         } else {
           const errorText = await response.text();
           toast("error", "Submission Failed", errorText);
         }
       } catch (err) {
         console.error("Submission Error:", err);
-        toast(
-          "error",
-          "Server Error",
-          "Could not connect to the PetroData server.",
-        );
+        toast("error", "Server Error", "Could not connect to the PetroData server.");
       }
     });
   }
