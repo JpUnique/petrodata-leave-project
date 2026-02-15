@@ -1,146 +1,601 @@
-/* Container adjustments for more data */
-.approval-card {
-  max-width: 600px; /* Slightly wider than login to fit two columns */
-  width: 95%;
+/**
+ * approve.css - Leave Approval Pages Stylesheet
+ * Styling for manager, HR, and MD approval review pages
+ */
+
+/* ============================================================================
+   DESIGN TOKENS / CSS VARIABLES
+   ============================================================================ */
+:root {
+  /* Colors */
+  --color-primary: #004d40;
+  --color-success: #00c853;
+  --color-success-dark: #00a040;
+  --color-error: #ff5252;
+  --color-error-dark: #d32f2f;
+  --color-info: #e0f2f1;
+  --color-text-primary: #333;
+  --color-text-secondary: #555;
+  --color-text-tertiary: #666;
+  --color-border: #ddd;
+  --color-background-light: rgba(0, 0, 0, 0.04);
+  --color-white: #fff;
+
+  /* Spacing */
+  --spacing-xs: 5px;
+  --spacing-sm: 10px;
+  --spacing-md: 15px;
+  --spacing-lg: 20px;
+  --spacing-xl: 30px;
+
+  /* Typography */
+  --font-family: "Poppins", sans-serif;
+  --font-size-sm: 0.75rem;
+  --font-size-xs: 0.85rem;
+  --font-size-base: 0.9rem;
+  --font-size-md: 0.95rem;
+
+  /* Border Radius */
+  --border-radius: 8px;
+
+  /* Transitions */
+  --transition-base: all 0.3s ease;
 }
 
-/* Two-column layout for details */
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+
+/**
+ * Reset box-sizing
+ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Body - Main container with scrollable content
+ */
+body {
+  font-family: var(--font-family);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  background: url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000")
+    no-repeat center center/cover;
+  background-attachment: fixed;
+  color: var(--color-text-primary);
+  overflow-y: auto;
+}
+
+/**
+ * Background overlay - Dark gradient overlay
+ */
+.background-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+/**
+ * Fade in animation
+ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/**
+ * Slide up animation
+ */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   LAYOUT & CONTAINER STYLES
+   ============================================================================ */
+
+/**
+ * Main container - Scrollable wrapper
+ */
+main {
+  position: relative;
+  z-index: 2;
+}
+
+/**
+ * Approval card - Main container for approval pages
+ */
+.approval-card {
+  max-width: 600px;
+  width: 95%;
+  animation: slideUp 0.6s ease-out;
+}
+
+/**
+ * Form section - Grouped content areas
+ */
+.form-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.form-section h2 i {
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+/* ============================================================================
+   INFORMATION DISPLAY STYLES
+   ============================================================================ */
+
+/**
+ * Info group - Two-column layout for displaying field pairs
+ */
 .info-group {
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 }
 
+/**
+ * Display wrapper - Container for label + data field pairs
+ */
 .display-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--spacing-xs);
 }
 
-.full-width {
+.display-wrapper.full-width {
   width: 100%;
-  margin-bottom: 15px;
+  flex: none;
+  margin-bottom: var(--spacing-md);
 }
 
-/* Styling the "Data Field" to look like the Signup inputs */
+/**
+ * Labels for display sections
+ */
 .display-wrapper label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: #555;
-  margin-left: 5px;
+  color: var(--color-text-secondary);
+  margin-left: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 .display-wrapper label i {
-  margin-right: 5px;
-  color: #004d40; /* PetroData Primary */
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  min-width: 18px;
 }
 
+/**
+ * Data field - Read-only display of information
+ */
 .data-field {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px 15px;
-  font-size: 0.95rem;
-  color: #333;
+  background: var(--color-background-light);
+  padding: var(--spacing-md);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
   min-height: 20px;
   display: flex;
   align-items: center;
+  gap: var(--spacing-sm);
 }
-/* HR email syling */
+
+/**
+ * Fieldset - Form grouping element
+ */
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  margin-bottom: var(--spacing-xl);
+}
+
+/**
+ * Legend - Fieldset title
+ */
+legend {
+  padding: 0;
+  margin: 0;
+}
+
+/**
+ * Decision field - Highlighted decision display
+ */
+.decision-field {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* ============================================================================
+   AUDIT TRAIL STYLES
+   ============================================================================ */
+
+/**
+ * Audit section - Container for decision history
+ */
+.audit-section {
+  padding-top: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+/**
+ * Audit highlight - Emphasized display for important decisions
+ */
+.audit-highlight {
+  background: #f1f3f4;
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 4px solid #004d40;
+  margin-bottom: 15px;
+}
+
+/* ============================================================================
+   FORM INPUT STYLES
+   ============================================================================ */
+
+/**
+ * Input wrapper - Container for form inputs with icon prefix
+ */
 .input-wrapper {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px 15px;
-  margin-top: 5px;
-  transition: all 0.3s ease;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-xs);
+  transition: var(--transition-base);
+  position: relative;
 }
 
 .input-wrapper:focus-within {
-  border-color: #004d40;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 77, 64, 0.1);
 }
 
+/**
+ * Input wrapper icon - Decorative icon in input
+ */
 .input-wrapper i {
-  color: #004d40;
-  margin-right: 12px;
-  font-size: 0.9rem;
+  color: var(--color-primary);
+  margin-right: var(--spacing-md);
+  font-size: var(--font-size-base);
+  flex-shrink: 0;
 }
 
-.input-wrapper input {
+/**
+ * Input elements within wrapper
+ */
+.input-wrapper input,
+.input-wrapper select,
+.input-wrapper textarea {
   flex: 1;
   border: none;
   outline: none;
-  font-family: "Poppins", sans-serif;
-  font-size: 0.9rem;
-  color: #333;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  background: transparent;
+  padding: 0;
 }
 
-small {
-  margin-left: 5px;
+.input-wrapper input::placeholder {
+  color: #999;
+}
+
+/**
+ * Helper text - Small descriptive text below inputs
+ */
+.helper-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-md);
   font-style: italic;
 }
 
-/* Approval Action Buttons */
-.approval-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 30px;
+.input-wrapper + small {
+  display: block;
+  margin-left: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  font-style: italic;
 }
 
+/* ============================================================================
+   FORWARDING SECTION
+   ============================================================================ */
+
+/**
+ * Forwarding box - Section for entering recipient email
+ */
+.forwarding-box {
+  margin-top: 25px;
+  padding: 15px;
+  border: 1px dashed #004d40;
+  border-radius: 8px;
+}
+
+.forwarding-box h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.forwarding-box h3 i {
+  color: var(--color-primary);
+}
+
+/* ============================================================================
+   BUTTON STYLES
+   ============================================================================ */
+
+/**
+ * Approval actions group - Container for approval buttons
+ */
+.approval-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+}
+
+/**
+ * Action button - Base styles for approval/rejection buttons
+ */
 .btn-action {
   flex: 1;
   border: none;
-  border-radius: 8px;
-  padding: 15px;
-  font-family: "Poppins", sans-serif;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  font-family: var(--font-family);
   font-weight: 600;
+  font-size: var(--font-size-base);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-base);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  color: white;
+  gap: var(--spacing-sm);
+  color: var(--color-white);
+  text-transform: none;
+  position: relative;
+  overflow: hidden;
 }
 
+.btn-action:active {
+  transform: translateY(1px);
+}
+
+.btn-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/**
+ * Approve button - Green gradient for approval action
+ */
 .btn-approve {
-  background: linear-gradient(135deg, #00c853 0%, #00a040 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-success) 0%,
+    var(--color-success-dark) 100%
+  );
   box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
 }
 
+.btn-approve:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
+}
+
+/**
+ * Reject button - Red gradient for rejection action
+ */
 .btn-reject {
-  background: linear-gradient(135deg, #ff5252 0%, #d32f2f 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-error) 0%,
+    var(--color-error-dark) 100%
+  );
   box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
 }
 
-.btn-action:hover {
+.btn-reject:hover:not(:disabled) {
   transform: translateY(-2px);
   filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
 }
 
-/* Status Banner (for already processed requests) */
+/* ============================================================================
+   STATUS & MESSAGE STYLES
+   ============================================================================ */
+
+/**
+ * Status banner - Alert message for processed requests
+ */
 .status-banner {
-  padding: 15px;
-  background: #e0f2f1;
-  border-radius: 8px;
-  color: #004d40;
+  padding: var(--spacing-md);
+  background: var(--color-info);
+  border-radius: var(--border-radius);
+  color: var(--color-primary);
   text-align: center;
   font-weight: 600;
-  margin-top: 20px;
-  border: 1px dashed #004d40;
+  margin-top: var(--spacing-lg);
+  border: 1px dashed var(--color-primary);
 }
 
+.status-banner i {
+  margin-right: var(--spacing-xs);
+}
+
+/**
+ * Staff name highlight - Emphasized staff name display
+ */
+.staff-name-highlight {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/**
+ * Hidden utility class - Hide elements
+ */
 .hidden {
-  display: none;
+  display: none !important;
 }
 
-/* Mobile optimization */
-@media (max-width: 480px) {
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+/**
+ * Tablet and below
+ */
+@media (max-width: 768px) {
+  :root {
+    --spacing-md: 12px;
+    --spacing-lg: 18px;
+  }
+
+  body {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
   .info-group {
     flex-direction: column;
   }
+
+  .approval-card {
+    max-width: 95vw;
+  }
+}
+
+/**
+ * Mobile devices
+ */
+@media (max-width: 480px) {
+  :root {
+    --spacing-md: 10px;
+    --spacing-sm: 8px;
+  }
+
+  body {
+    padding: var(--spacing-md);
+  }
+
+  .info-group {
+    flex-direction: column;
+  }
+
+  .approval-actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .btn-action {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+
+  .approval-card {
+    max-width: 95vw;
+  }
+
+  .display-wrapper label {
+    font-size: 0.8rem;
+  }
+
+  .data-field {
+    font-size: 0.85rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+/**
+ * Focus visible styles for keyboard navigation
+ */
+.btn-action:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.input-wrapper input:focus-visible {
+  outline: none;
+}
+
+/**
+ * Reduced motion preferences
+ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/**
+ * Screen reader only text
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

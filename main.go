@@ -47,9 +47,15 @@ func main() {
 			http.ServeFile(w, r, "./static/signup.html")
 			return
 		}
-		// Serve CSS, JS, and Images from the static folder
-		fileServer := http.FileServer(http.Dir("./static"))
-		fileServer.ServeHTTP(w, r)
+
+		// Check if file exists to avoid potential loops
+		fpath := "./static" + r.URL.Path
+		if _, err := os.Stat(fpath); os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
 	})
 
 	// API Endpoints
@@ -60,8 +66,9 @@ func main() {
 	mux.HandleFunc("/api/leave/action", handlers.HandleLineManagerAction)
 	mux.HandleFunc("/api/leave/hr-details", handlers.GetLeaveRequestByHRToken)
 	mux.HandleFunc("/api/leave/hr-action", handlers.HandleHRManagerAction)
-	mux.HandleFunc("/api/leave/md-details", handlers.GetLeaveRequestByMDToken) 
+	mux.HandleFunc("/api/leave/md-details", handlers.GetLeaveRequestByMDToken)
 	mux.HandleFunc("/api/leave/md-action", handlers.HandleMDAction)
+	mux.HandleFunc("/api/leave/final-details", handlers.GetFinalArchiveDetails)
 
 	// 5. Server Configuration
 	srv := &http.Server{

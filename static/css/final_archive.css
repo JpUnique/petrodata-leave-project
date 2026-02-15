@@ -1,0 +1,300 @@
+/**
+ * final_archive.css - Leave Archive Page Stylesheet
+ * Styling for finalized leave request archive and PDF generation
+ */
+
+/* ============================================================================
+   IMPORTS
+   ============================================================================ */
+
+/**
+ * Import base approval styles to maintain consistency
+ */
+@import url("approve.css");
+
+/* ============================================================================
+   DESIGN TOKENS / CSS VARIABLES
+   ============================================================================ */
+
+:root {
+  /* Archive-specific spacing adjustments */
+  --archive-margin-top: 25px;
+  --archive-padding-top: 20px;
+  --archive-footer-margin: 30px;
+
+  /* Archive-specific font sizes */
+  --archive-section-title-size: 0.9rem;
+  --archive-footer-size: 0.7rem;
+
+  /* Archive-specific colors */
+  --archive-footer-text: #888;
+}
+
+/* ============================================================================
+   LAYOUT & CONTAINER ADJUSTMENTS
+   ============================================================================ */
+
+/**
+ * Auth container - Scrollable layout for long archive forms
+ */
+.auth-container {
+  padding: 50px 0;
+  align-items: flex-start;
+}
+
+/* ============================================================================
+   AUDIT SECTION STYLES
+   ============================================================================ */
+
+/**
+ * Audit section - Container for approval audit trail
+ */
+.audit-section {
+  margin-top: var(--archive-margin-top);
+  padding-top: var(--archive-padding-top);
+  border-top: 2px dashed var(--color-primary);
+}
+
+/**
+ * Section title - Styled heading for audit sections
+ */
+.section-title {
+  font-size: var(--archive-section-title-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/**
+ * Decision field - Audit decision display (inherits from approve.css)
+ */
+.decision-field {
+  text-transform: uppercase;
+  font-weight: 700;
+  justify-content: center;
+}
+
+/**
+ * Archive final decision - Emphasized final MD decision
+ */
+.archive-final-decision {
+  font-size: 1.1rem;
+  border: 2px solid var(--color-border);
+  font-weight: 700;
+}
+
+/* ============================================================================
+   ARCHIVE METADATA STYLES
+   ============================================================================ */
+
+/**
+ * Archive footer info - Archive generation metadata
+ */
+.archive-footer-info {
+  margin-top: var(--archive-footer-margin);
+  padding: var(--spacing-md);
+  background: #f5f5f5;
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--color-primary);
+  text-align: center;
+  font-size: var(--archive-footer-size);
+  color: var(--archive-footer-text);
+  line-height: 1.4;
+  margin-bottom: var(--spacing-lg);
+}
+
+.archive-footer-info p {
+  margin: var(--spacing-xs) 0;
+  font-size: 0.65rem;
+}
+
+.archive-footer-info p:last-child {
+  font-size: 0.6rem;
+  color: #999;
+  font-style: italic;
+}
+
+.archive-footer-info strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* ============================================================================
+   BUTTON STYLES
+   ============================================================================ */
+
+/**
+ * No print - Container for non-printable elements
+ */
+.no-print {
+  page-break-inside: avoid;
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-md) 0;
+  margin-top: var(--spacing-lg);
+}
+
+/**
+ * Archive download button - Centered PDF download button
+ */
+.archive-download-btn {
+  width: auto;
+  max-width: 350px;
+  padding: var(--spacing-md) var(--spacing-lg) !important;
+  margin-top: 0 !important;
+}
+
+/* ============================================================================
+   PRINT & PDF GENERATION STYLES
+   ============================================================================ */
+
+/**
+ * Print media - Optimize layout for PDF generation and printing
+ */
+@media print {
+  /**
+   * Hide non-printable elements
+   */
+  .no-print,
+  .background-overlay {
+    display: none !important;
+  }
+
+  /**
+   * Clean card styling for PDF
+   */
+  .auth-card {
+    box-shadow: none !important;
+    border: 1px solid var(--color-border) !important;
+    margin: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  /**
+   * Ensure containers are print-friendly
+   */
+  .auth-container {
+    padding: 0 !important;
+    align-items: initial !important;
+    min-height: auto !important;
+  }
+
+  /**
+   * Section page breaks
+   */
+  .form-section {
+    page-break-inside: avoid;
+  }
+
+  /**
+   * Prevent header break from content
+   */
+  .logo-section {
+    page-break-after: avoid;
+  }
+
+  /**
+   * Keep audit trail together
+   */
+  .audit-section {
+    page-break-inside: avoid;
+  }
+
+  /**
+   * Keep footer info together
+   */
+  .archive-footer-info {
+    page-break-inside: avoid;
+    border: 1px solid var(--color-border) !important;
+  }
+
+  /**
+   * Button hover/focus states not needed in print
+   */
+  .btn-action:hover,
+  .btn-action:focus {
+    transform: none !important;
+    filter: none !important;
+  }
+
+  /**
+   * Remove focus outlines in print
+   */
+  *:focus {
+    outline: none !important;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+/**
+ * Tablet and below
+ */
+@media (max-width: 768px) {
+  .audit-section {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+  }
+
+  .archive-footer-info {
+    margin-top: var(--spacing-lg);
+    font-size: 0.65rem;
+  }
+}
+
+/**
+ * Mobile devices
+ */
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 20px 0;
+  }
+
+  .section-title {
+    font-size: 0.8rem;
+  }
+
+  .archive-footer-info {
+    margin-top: var(--spacing-md);
+    font-size: 0.6rem;
+    padding: var(--spacing-sm);
+  }
+
+  .archive-download-btn {
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: var(--font-size-base);
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+/**
+ * Ensure text contrast in archive footer
+ */
+.archive-footer-info {
+  color: var(--color-text-tertiary);
+}
+
+/**
+ * Ensure decision fields are readable
+ */
+.decision-field {
+  color: var(--color-text-primary);
+}
+
+/**
+ * Print-safe focus styles
+ */
+@media screen {
+  .archive-download-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

@@ -3,90 +3,151 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Create your PetroData Staff Portal account to manage your leave requests"
+    />
+    <meta name="theme-color" content="#004d40" />
     <title>Register | PetroData Leave Portal</title>
+
+    <!-- Google Fonts -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Font Awesome Icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
 
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/auth.css" />
   </head>
+
   <body>
-    <div class="background-overlay"></div>
+    <!-- Background overlay -->
+    <div class="background-overlay" aria-hidden="true"></div>
 
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="accent-bar"></div>
+    <main class="auth-container">
+      <article class="auth-card">
+        <!-- Accent bar -->
+        <div class="accent-bar" aria-hidden="true"></div>
 
-        <div class="logo-section">
+        <!-- Header section -->
+        <header class="logo-section">
           <img
             src="assets/newlogo.png"
             alt="PetroData Logo"
             class="main-logo"
+            width="150"
+            height="150"
           />
           <h1>Leave Registration</h1>
           <p>Create your account to access leave requests</p>
-        </div>
+        </header>
 
-        <form id="signupForm" class="stylish-form">
+        <!-- Signup form -->
+        <form id="signupForm" class="stylish-form" aria-label="Signup form">
+          <!-- Full name input group -->
           <div class="input-wrapper">
-            <i class="fas fa-user"></i>
-            <input type="text" id="fullName" placeholder="Full Name" required />
-          </div>
-
-          <div class="input-wrapper">
-            <i class="fas fa-envelope"></i>
+            <label for="fullName" class="sr-only">Full name</label>
+            <i class="fas fa-user" aria-hidden="true"></i>
             <input
-              type="email"
-              id="signupEmail"
-              placeholder="name@petrodata.net"
+              type="text"
+              id="fullName"
+              name="fullName"
+              placeholder="Full Name"
+              aria-label="Full name"
+              aria-required="true"
               required
             />
           </div>
-
+          
+          <!-- Phone input group -->
           <div class="input-wrapper">
-            <i class="fas fa-phone"></i>
+            <label for="phone" class="sr-only">Phone number</label>
+            <i class="fas fa-phone" aria-hidden="true"></i>
             <input
               type="tel"
               id="phone"
+              name="phone"
               placeholder="Phone Number (e.g. 080...)"
+              aria-label="Phone number"
+              aria-required="true"
               required
             />
           </div>
 
+          <!-- Email input group -->
           <div class="input-wrapper">
-            <i class="fas fa-lock"></i>
+            <label for="signupEmail" class="sr-only">Email address</label>
+            <i class="fas fa-envelope" aria-hidden="true"></i>
+            <input
+              type="email"
+              id="signupEmail"
+              name="email"
+              placeholder="name@petrodata.net"
+              aria-label="Email address"
+              aria-required="true"
+              required
+            />
+          </div>
+
+          <!-- Password input group -->
+          <div class="input-wrapper">
+            <label for="signupPass" class="sr-only">Password</label>
+            <i class="fas fa-lock" aria-hidden="true"></i>
             <input
               type="password"
               id="signupPass"
+              name="password"
               placeholder="Strong Password"
               autocomplete="new-password"
+              aria-label="Password"
+              aria-required="true"
+              aria-describedby="passwordHint"
               required
             />
-            <i class="fas fa-eye toggle-password" id="toggleSignupPass"></i>
+            <button
+              type="button"
+              id="toggleSignupPass"
+              class="toggle-password"
+              aria-label="Toggle password visibility"
+              aria-pressed="false"
+            >
+              <i class="fas fa-eye" aria-hidden="true"></i>
+            </button>
           </div>
 
-          <small class="password-hint"
-            >Must include Uppercase, Number & Symbol.</small
-          >
+          <!-- Password hint -->
+          <small id="passwordHint" class="password-hint">
+            Must include Uppercase, Number & Symbol.
+          </small>
 
+          <!-- Submit button -->
           <button type="submit" class="btn-gradient btn-signup">
-            Create Account <i class="fas fa-user-plus"></i>
+            Create Account <i class="fas fa-user-plus" aria-hidden="true"></i>
           </button>
         </form>
 
-        <div class="auth-footer">
-          Already have an account? <a href="login.html">Sign In</a>
-        </div>
-      </div>
-    </div>
+        <!-- Footer section -->
+        <footer class="auth-footer">
+          <p>
+            Already have an account?
+            <a href="login.html" aria-label="Sign in to your account">
+              Sign In
+            </a>
+          </p>
+        </footer>
+      </article>
+    </main>
 
-    <script src="js/auth.js"></script>
+    <!-- Scripts -->
+    <script src="js/auth.js" defer></script>
   </body>
 </html>

@@ -1,9 +1,21 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Character encoding - must be first -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Leave Portal | PetroData</title>
+
+    <!-- Title should be descriptive -->
+    <title>Leave Request Portal | PetroData</title>
+
+    <!-- Meta tags for optimization -->
+    <meta
+      name="description"
+      content="Submit and manage leave requests securely"
+    />
+    <meta name="theme-color" content="#004d40" />
+
+    <!-- External stylesheets (order: Fonts → Icons → Styles) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
@@ -12,81 +24,111 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <link rel="stylesheet" href="css/form-style.css" />
   </head>
+
   <body>
-    <div class="background-overlay"></div>
+    <!-- Main content wrapper -->
+    <div class="background-overlay" role="presentation"></div>
 
-    <div class="form-wrapper">
-      <div class="form-card">
-        <div class="accent-bar"></div>
+    <main class="form-wrapper">
+      <article class="form-card">
+        <div class="accent-bar" aria-hidden="true"></div>
 
+        <!-- Header section -->
         <header class="form-header">
           <div class="branding-center">
             <img
               src="assets/newlogo.png"
               alt="PetroData Logo"
               class="form-logo"
+              width="80"
+              height="80"
             />
             <h1>Leave Request Portal</h1>
             <p>Ensure all details match your official records</p>
           </div>
         </header>
 
-        <form id="leaveForm">
-          <div class="form-section">
-            <h3><i class="fas fa-user-shield"></i> Staff Information</h3>
+        <!-- Leave Request Form -->
+        <form id="leaveForm" aria-label="Leave request form">
+          <!-- Staff Information Section -->
+          <section class="form-section">
+            <h2>
+              <i class="fas fa-user-shield" aria-hidden="true"></i>
+              Staff Information
+            </h2>
+
             <div class="grid-row">
               <div class="input-group">
                 <label for="staffName">Staff Name</label>
                 <input
                   type="text"
                   id="staffName"
+                  name="staffName"
                   placeholder="Loading name..."
                   required
+                  aria-required="true"
                 />
               </div>
+
               <div class="input-group">
                 <label for="staffNo">Staff Number</label>
                 <input
                   type="text"
                   id="staffNo"
+                  name="staffNo"
                   placeholder="e.g. 0084"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
+
             <div class="grid-row">
               <div class="input-group">
                 <label for="designation">Designation</label>
                 <input
                   type="text"
                   id="designation"
+                  name="designation"
                   placeholder="Geophysicist"
                   required
+                  aria-required="true"
                 />
               </div>
+
               <div class="input-group">
                 <label for="department">Department</label>
                 <input
                   type="text"
                   id="department"
+                  name="department"
                   placeholder="Operations Lagos"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
-          </div>
+          </section>
 
-          <div class="form-section">
-            <h3><i class="fas fa-calendar-check"></i> Leave Particulars</h3>
+          <!-- Leave Particulars Section -->
+          <section class="form-section">
+            <h2>
+              <i class="fas fa-calendar-check" aria-hidden="true"></i>
+              Leave Particulars
+            </h2>
+
             <div class="grid-row">
               <div class="input-group">
                 <label for="leaveType">Type of Leave</label>
-                <select id="leaveType" required>
+                <select
+                  id="leaveType"
+                  name="leaveType"
+                  required
+                  aria-required="true"
+                >
+                  <option value="">Select leave type...</option>
                   <option value="Annual">Annual Leave</option>
                   <option value="Sick">Sick Leave</option>
                   <option value="Maternity">Maternity/Paternity</option>
@@ -94,88 +136,141 @@
                   <option value="Casual">Casual Leave</option>
                 </select>
               </div>
+
               <div class="input-group">
                 <label for="reliefStaff">Relief Staff Name</label>
                 <input
                   type="text"
                   id="reliefStaff"
+                  name="reliefStaff"
                   placeholder="Full Name"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
+
             <div class="grid-row">
               <div class="input-group">
                 <label for="startDate">Commencement Date</label>
-                <input type="date" id="startDate" required />
+                <input
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  required
+                  aria-required="true"
+                />
               </div>
+
               <div class="input-group">
                 <label for="resumptionDate">Resumption Date</label>
-                <input type="date" id="resumptionDate" required />
+                <input
+                  type="date"
+                  id="resumptionDate"
+                  name="resumptionDate"
+                  required
+                  aria-required="true"
+                />
               </div>
             </div>
+
             <div class="input-group full-width">
               <label for="totalDays">Total Days This Vacation</label>
               <input
                 type="text"
                 id="totalDays"
+                name="totalDays"
                 placeholder="Automatically calculated..."
                 readonly
+                aria-readonly="true"
               />
             </div>
-          </div>
+          </section>
 
-          <div class="form-section">
-            <h3><i class="fas fa-map-marker-alt"></i> Contact Details</h3>
+          <!-- Contact Details Section -->
+          <section class="form-section">
+            <h2>
+              <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+              Contact Details
+            </h2>
+
             <div class="input-group full-width">
               <label for="contactAddress">Contact Address while on Leave</label>
               <input
                 type="text"
                 id="contactAddress"
+                name="contactAddress"
                 placeholder="Street, City, State"
                 required
+                aria-required="true"
               />
             </div>
-          </div>
+          </section>
 
-          <div class="workflow-card">
+          <!-- Approval Workflow Section -->
+          <section class="workflow-card" aria-labelledby="workflow-title">
             <div class="workflow-content">
-              <h3><i class="fas fa-paper-plane"></i> Approval Workflow</h3>
+              <h2 id="workflow-title">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                Approval Workflow
+              </h2>
               <p>
                 Submit this request to your Line Manager for digital approval.
               </p>
+
               <div class="input-group">
                 <label for="managerEmail">Manager Email</label>
                 <div class="email-input-wrapper">
-                  <i class="fas fa-user-check"></i>
+                  <i class="fas fa-user-check" aria-hidden="true"></i>
                   <input
                     type="email"
                     id="managerEmail"
+                    name="managerEmail"
                     placeholder="manager@petrodata.net"
                     required
+                    aria-required="true"
+                    aria-describedby="manager-help"
                   />
-                  <button type="submit" class="btn-inline-send">
-                    Send Request <i class="fas fa-chevron-right"></i>
-                  </button>
+                  <small id="manager-help" class="helper-text">
+                    Enter your direct manager's email address
+                  </small>
                 </div>
               </div>
+
+              <button
+                type="submit"
+                class="btn-inline-send"
+                aria-label="Send leave request"
+              >
+                Send Request
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </button>
             </div>
-          </div>
+          </section>
         </form>
 
-        <div class="footer-actions">
+        <!-- Footer Actions -->
+        <footer class="footer-actions">
           <hr />
           <div class="logout-wrapper">
             <p>Finished with your request?</p>
-            <button id="logoutBtn" class="btn-logout">
-              <i class="fas fa-sign-out-alt"></i> Sign Out
+            <button
+              id="logoutBtn"
+              type="button"
+              class="btn-logout"
+              aria-label="Sign out of the portal"
+            >
+              <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+              Sign Out
             </button>
           </div>
-        </div>
-      </div>
-    </div>
+        </footer>
+      </article>
+    </main>
 
-    <script src="js/auth.js"></script>
-    <script src="js/form-handler.js"></script>
+    <!-- External libraries first, then app scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/form-handler.js" defer></script>
   </body>
 </html>
