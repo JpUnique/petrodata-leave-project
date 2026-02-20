@@ -1,8 +1,3 @@
-/**
- * form-handler.js - Leave Request Form Handler
- * Manages leave request form submission, date calculations, and user authentication
- */
-
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -63,7 +58,7 @@ const CONFIG = {
 function getElement(id) {
   const element = document.getElementById(id);
   if (!element) {
-    console.warn(`Element with ID '${id}' not found`);
+    console.warn(` [ELEMENT] Element with ID '${id}' not found`);
   }
   return element;
 }
@@ -143,77 +138,64 @@ function navigateTo(page) {
 }
 
 // ============================================================================
-// DATE CALCULATION
+// DATE CALCULATION (uses utility.js)
 // ============================================================================
 
 /**
- * Calculate the number of days between two dates
- * @param {string} startDateStr - Start date in YYYY-MM-DD format
- * @param {string} endDateStr - End date in YYYY-MM-DD format
- * @returns {number} Number of days (minimum 1)
+ * Update the total days display based on start and resumption dates
  */
-function calculateDaysDifference(startDateStr, endDateStr) {
-  if (!startDateStr || !endDateStr) {
-    return 0;
-  }
+function updateTotalDays() {
+  const startDateInput = getElement(CONFIG.DOM_IDS.START_DATE);
+  const resumptionDateInput = getElement(CONFIG.DOM_IDS.RESUMPTION_DATE);
+  const totalDaysInput = getElement(CONFIG.DOM_IDS.TOTAL_DAYS);
 
-  try {
-    const startDate = new Date(startDateStr);
-    const endDate = new Date(endDateStr);
-
-    // Validate dates
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return 0;
-    }
-
-    const timeDifference = Math.abs(endDate - startDate);
-    const daysDifference = Math.ceil(timeDifference / CONFIG.TIME.MS_PER_DAY);
-
-    return daysDifference > 0 ? daysDifference : 1;
-  } catch (error) {
-    console.error("Date calculation error:", error);
-    return 0;
-  }
-}
-
-/**
- * Format days for display in the total days field
- * @param {number} days - Number of days
- * @returns {string} Formatted days string
- */
-function formatDaysDisplay(days) {
-  if (days <= 0) {
-    return CONFIG.MESSAGES.INVALID_DATES;
-  }
-
-  if (days === 1) {
-    return "1 Working Day";
-  }
-
-  return `${days} Working Days`;
-}
-
-/**
- * Update the total days display based on start and end dates
- * @param {HTMLElement} startDateInput - Start date input element
- * @param {HTMLElement} endDateInput - End date input element
- * @param {HTMLElement} totalDaysInput - Total days input element
- */
-function updateTotalDays(startDateInput, endDateInput, totalDaysInput) {
-  if (!startDateInput || !endDateInput || !totalDaysInput) {
-    console.error("Date input elements not found");
+  // Validate elements exist
+  if (!startDateInput || !resumptionDateInput || !totalDaysInput) {
+    console.error("[DATE_CALC] Missing date input elements");
     return;
   }
 
   const startDate = startDateInput.value;
-  const endDate = endDateInput.value;
+  const resumptionDate = resumptionDateInput.value;
 
-  if (!startDate || !endDate) {
+  // Debug logging
+  console.log(
+    `[DATE_CALC] Raw input values: Start="${startDate}", End="${resumptionDate}"`,
+  );
+  console.log(
+    `[DATE_CALC] Input elements found: startDateInput=${!!startDateInput}, resumptionDateInput=${!!resumptionDateInput}, totalDaysInput=${!!totalDaysInput}`,
+  );
+
+  if (!startDate || !resumptionDate) {
+    console.log("[DATE_CALC] Dates incomplete - clearing field");
+    totalDaysInput.value = "";
+    updateTotalDaysStyle(totalDaysInput);
     return;
   }
 
-  const days = calculateDaysDifference(startDate, endDate);
-  totalDaysInput.value = formatDaysDisplay(days);
+  // Ensure Utils is available
+  if (typeof Utils === "undefined") {
+    console.error(
+      "[DATE_CALC] Utils not loaded! Check that utility.js is loaded before form-handler.js",
+    );
+    totalDaysInput.value = "Error: Utils not loaded";
+    return;
+  }
+
+  // Calculate working days
+  const workingDays = Utils.calculateLeaveDays(startDate, resumptionDate);
+  const formattedText = Utils.formatDaysText(workingDays);
+
+  console.log(
+    `[DATE_CALC] Result: ${workingDays} days, formatted as: "${formattedText}"`,
+  );
+
+  // Update field
+  totalDaysInput.value = formattedText;
+  console.log(`[DATE_CALC] Updated total days field to: "${formattedText}"`);
+
+  // Update styling
+  updateTotalDaysStyle(totalDaysInput);
 }
 
 // ============================================================================
@@ -221,13 +203,14 @@ function updateTotalDays(startDateInput, endDateInput, totalDaysInput) {
 // ============================================================================
 
 /**
- * Check if user is authenticated (has saved session data)
- * @returns {Object|null} User data or null if not authenticated
+ * Check if user is authenticated by verifying session storage
+ * @returns {Object|null} User data {userName, userEmail} or null if not authenticated
  */
 function checkAuthentication() {
   const userName = getFromStorage(CONFIG.STORAGE.USER_NAME);
   const userEmail = getFromStorage(CONFIG.STORAGE.USER_EMAIL);
 
+  // User must have a name to be considered authenticated
   if (!userName) {
     return null;
   }
@@ -237,22 +220,24 @@ function checkAuthentication() {
 
 /**
  * Auto-fill staff name from session storage
- * @param {string} staffName - Staff name from storage
+ * Sets the field as readonly to prevent manual editing
+ * @param {string} staffName - Staff name to auto-fill
  */
 function autoFillStaffName(staffName) {
   const staffNameInput = getElement(CONFIG.DOM_IDS.STAFF_NAME);
   if (!staffNameInput) {
-    console.error("Staff name input not found");
+    console.error("[AUTH] Staff name input not found");
     return;
   }
 
+  // Set the value and make it readonly
   staffNameInput.value = staffName;
   staffNameInput.readOnly = true;
-  console.log("Staff name auto-filled");
+  console.log(`[AUTH] Staff name auto-filled: "${staffName}"`);
 }
 
 /**
- * Handle unauthenticated user redirect
+ * Handle unauthenticated user by showing warning and redirecting to login
  */
 function handleUnauthenticatedUser() {
   showWarning(
@@ -268,9 +253,9 @@ function handleUnauthenticatedUser() {
 // ============================================================================
 
 /**
- * Validate leave form inputs
- * @param {Object} formData - Form data object
- * @returns {boolean} True if valid
+ * Validate leave form inputs for required fields and formats
+ * @param {Object} formData - Form data object to validate
+ * @returns {boolean} True if form is valid, false otherwise
  */
 function validateLeaveForm(formData) {
   const requiredFields = [
@@ -286,25 +271,29 @@ function validateLeaveForm(formData) {
     "manager_email",
   ];
 
+  // Check that all required fields have values
   for (const field of requiredFields) {
-    if (!formData[field] || formData[field].trim() === "") {
-      console.error(`Missing required field: ${field}`);
+    if (!formData[field] || formData[field].toString().trim() === "") {
+      console.error(`[VALIDATION] Missing required field: ${field}`);
       return false;
     }
   }
 
   // Validate email format
   if (!formData.manager_email.includes("@")) {
-    console.error("Invalid manager email format");
+    console.error(" [VALIDATION] Invalid manager email format");
     return false;
   }
 
+  console.log("[VALIDATION] Form validation passed");
   return true;
 }
 
 /**
- * Collect form data from the DOM
- * @returns {Object} Form data object
+ * Collect form data from all input fields
+ * Aggregates data from DOM elements into a single object
+ * Uses Utils.calculateLeaveDays() for total_days
+ * @returns {Object} Form data object with all field values
  */
 function collectFormData() {
   const startDateInput = getElement(CONFIG.DOM_IDS.START_DATE);
@@ -312,7 +301,12 @@ function collectFormData() {
 
   const startDate = startDateInput ? startDateInput.value : "";
   const endDate = endDateInput ? endDateInput.value : "";
-  const totalDays = calculateDaysDifference(startDate, endDate);
+
+  // Calculate total days using Utils from utility.js
+  let totalDays = 0;
+  if (startDate && endDate && typeof Utils !== "undefined") {
+    totalDays = Utils.calculateLeaveDays(startDate, endDate);
+  }
 
   return {
     staff_name: getElement(CONFIG.DOM_IDS.STAFF_NAME)?.value || "",
@@ -336,6 +330,7 @@ function collectFormData() {
 
 /**
  * Submit leave request to backend API
+ * Handles success/error responses and form reset
  * @param {Object} leaveRequestData - Leave request form data
  */
 async function submitLeaveRequest(leaveRequestData) {
@@ -349,45 +344,58 @@ async function submitLeaveRequest(leaveRequestData) {
     if (response.ok) {
       const result = await response.json();
 
+      // Show success message
       await showSuccess(
         CONFIG.MESSAGES.SUBMISSION_SUCCESS,
         result.message || CONFIG.MESSAGES.SUBMISSION_SUCCESS_MSG,
       );
 
-      // Reset form
+      // Reset form after successful submission
       const leaveForm = getElement(CONFIG.DOM_IDS.LEAVE_FORM);
       if (leaveForm) {
         leaveForm.reset();
-        // Restore auto-filled staff name
+
+        // Restore auto-filled staff name after reset
         const savedName = getFromStorage(CONFIG.STORAGE.USER_NAME);
         if (savedName) {
           autoFillStaffName(savedName);
         }
+
+        // Clear total days field
+        const totalDaysInput = getElement(CONFIG.DOM_IDS.TOTAL_DAYS);
+        if (totalDaysInput) {
+          totalDaysInput.value = "";
+          updateTotalDaysStyle(totalDaysInput);
+        }
       }
+
+      console.log("[SUBMISSION] Leave request submitted successfully");
     } else {
       const errorText = await response.text();
       showError(
         CONFIG.MESSAGES.SUBMISSION_FAILED,
         errorText || CONFIG.MESSAGES.SUBMISSION_FAILED,
       );
+      console.error("[SUBMISSION] Server returned error:", errorText);
     }
   } catch (error) {
-    console.error("Leave Submission Error:", error);
+    console.error("[SUBMISSION] Leave submission error:", error);
     showError(CONFIG.MESSAGES.SERVER_ERROR, CONFIG.MESSAGES.SERVER_ERROR_MSG);
   }
 }
 
 /**
  * Handle leave form submission
+ * Validates form data before submission
  * @param {Event} event - Form submit event
  */
 async function handleLeaveFormSubmit(event) {
   event.preventDefault();
 
-  // Collect form data
+  // Collect all form data
   const leaveRequestData = collectFormData();
 
-  // Validate form
+  // Validate before submission
   if (!validateLeaveForm(leaveRequestData)) {
     showError("Validation Error", "Please fill all required fields correctly.");
     return;
@@ -398,47 +406,181 @@ async function handleLeaveFormSubmit(event) {
 }
 
 // ============================================================================
-// INITIALIZATION
+// DOM STYLING & INITIALIZATION
 // ============================================================================
 
 /**
- * Initialize form handler on DOM ready
+ * Update styling for total days field
+ * Adds/removes has-value class based on field content
+ * @param {HTMLElement} totalDaysInput - The total days input element
+ */
+function updateTotalDaysStyle(totalDaysInput) {
+  if (!totalDaysInput) return;
+
+  const hasValue = totalDaysInput.value && totalDaysInput.value.trim() !== "";
+
+  if (hasValue) {
+    totalDaysInput.classList.add("has-value");
+    // Force a visual refresh for readonly fields
+    totalDaysInput.style.backgroundColor = "";
+    console.log("🎨 [STYLING] Total days field marked as has-value");
+  } else {
+    totalDaysInput.classList.remove("has-value");
+    console.log("🎨 [STYLING] Total days field has-value class removed");
+  }
+}
+
+/**
+ * Initialize input field styling based on initial values
+ * Adds/removes 'has-value' class to show white background when filled
+ */
+function initializeInputStyling() {
+  const inputs = document.querySelectorAll(
+    `#${CONFIG.DOM_IDS.STAFF_NAME},
+     #${CONFIG.DOM_IDS.STAFF_NO},
+     #${CONFIG.DOM_IDS.DESIGNATION},
+     #${CONFIG.DOM_IDS.DEPARTMENT},
+     #${CONFIG.DOM_IDS.LEAVE_TYPE},
+     #${CONFIG.DOM_IDS.START_DATE},
+     #${CONFIG.DOM_IDS.RESUMPTION_DATE},
+     #${CONFIG.DOM_IDS.TOTAL_DAYS},
+     #${CONFIG.DOM_IDS.RELIEF_STAFF},
+     #${CONFIG.DOM_IDS.CONTACT_ADDRESS},
+     #${CONFIG.DOM_IDS.MANAGER_EMAIL}`,
+  );
+
+  /**
+   * Update styling for a single input
+   * @param {HTMLElement} input - The input element
+   */
+  function updateInputStyle(input) {
+    if (input.value && input.value.trim() !== "") {
+      input.classList.add("has-value");
+    } else {
+      input.classList.remove("has-value");
+    }
+  }
+
+  // Apply initial styling based on current values
+  inputs.forEach((input) => updateInputStyle(input));
+
+  // Add listeners to update styling when values change
+  inputs.forEach((input) => {
+    input.addEventListener("input", function () {
+      updateInputStyle(this);
+    });
+
+    input.addEventListener("change", function () {
+      updateInputStyle(this);
+    });
+
+    input.addEventListener("blur", function () {
+      updateInputStyle(this);
+    });
+  });
+
+  console.log(
+    `[STYLING] Input styling initialized for ${inputs.length} form fields`,
+  );
+}
+
+// ============================================================================
+// DOCUMENT READY - MAIN INITIALIZATION
+// ============================================================================
+
+/**
+ * Initialize form handler when DOM is fully loaded
+ * Sets up authentication, date listeners, and form submission handlers
  */
 document.addEventListener("DOMContentLoaded", () => {
-  // Check authentication
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
+  console.log("[INIT] DOM Content Loaded - Starting form initialization");
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
+
+  // === STEP 1: Authentication Check ===
   const user = checkAuthentication();
   if (!user) {
+    console.log(" [INIT] User not authenticated - redirecting to login");
     handleUnauthenticatedUser();
     return;
   }
 
-  // Auto-fill staff name
+  console.log(`[AUTH] User authenticated: ${user.userName}`);
+
+  // === STEP 2: Auto-fill Staff Name ===
   autoFillStaffName(user.userName);
 
-  // Get form elements
+  // === STEP 3: Get Form Elements ===
+  console.log("📋 [INIT] Getting form elements...");
   const leaveForm = getElement(CONFIG.DOM_IDS.LEAVE_FORM);
   const startDateInput = getElement(CONFIG.DOM_IDS.START_DATE);
   const resumptionDateInput = getElement(CONFIG.DOM_IDS.RESUMPTION_DATE);
   const totalDaysInput = getElement(CONFIG.DOM_IDS.TOTAL_DAYS);
 
-  // Setup date change listeners for real-time calculation
-  if (startDateInput && resumptionDateInput && totalDaysInput) {
-    startDateInput.addEventListener("change", () =>
-      updateTotalDays(startDateInput, resumptionDateInput, totalDaysInput),
-    );
-
-    resumptionDateInput.addEventListener("change", () =>
-      updateTotalDays(startDateInput, resumptionDateInput, totalDaysInput),
-    );
-
-    console.log("Date change listeners attached");
+  if (!leaveForm) {
+    console.error(" [INIT] Leave form not found - cannot proceed");
+    return;
   }
 
-  // Setup form submission
+  // === STEP 4: Initialize Input Styling ===
+  initializeInputStyling();
+
+  // === STEP 5: Setup Date Change Listeners ===
+  if (startDateInput && resumptionDateInput && totalDaysInput) {
+    console.log("[INIT] Attaching date change listeners...");
+
+    /**
+     * Handler for date input changes
+     * Updates total days calculation and styling
+     */
+    const dateChangeHandler = (event) => {
+      console.log(
+        `[EVENT] Date input changed (${event.type}) - triggering calculation`,
+      );
+      updateTotalDays();
+    };
+
+    // Use 'change' event (most reliable for date inputs) and 'blur' as fallback
+    startDateInput.addEventListener("change", dateChangeHandler);
+    startDateInput.addEventListener("blur", dateChangeHandler);
+
+    console.log("[INIT] Start date listeners attached");
+
+    resumptionDateInput.addEventListener("change", dateChangeHandler);
+    resumptionDateInput.addEventListener("blur", dateChangeHandler);
+
+    console.log("[INIT] Resumption date listeners attached");
+
+    // Test if both dates already have values (e.g., browser autofill)
+    if (startDateInput.value && resumptionDateInput.value) {
+      console.log(
+        "📅 [INIT] Both dates pre-filled - running initial calculation...",
+      );
+      updateTotalDays();
+    }
+  } else {
+    console.error(" [INIT] Date input elements not found", {
+      startDate: !!startDateInput,
+      resumptionDate: !!resumptionDateInput,
+      totalDays: !!totalDaysInput,
+    });
+  }
+
+  // === STEP 6: Setup Form Submission ===
   if (leaveForm) {
     leaveForm.addEventListener("submit", handleLeaveFormSubmit);
-    console.log("Leave form submission handler attached");
+    console.log("[INIT] Leave form submission handler attached");
   }
 
-  console.log("Form handler initialized");
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
+  console.log("[INIT] Form handler initialization complete");
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
 });

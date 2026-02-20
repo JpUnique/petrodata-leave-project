@@ -324,6 +324,37 @@ body {
   margin-top: var(--spacing-xs);
 }
 
+/**
+ * Target all inputs (including date and select) when they have a value.
+ * This ensures they match the 'Staff Name' and 'Staff Number' style.
+ */
+.input-group input.has-value,
+.input-group select.has-value,
+.input-group textarea.has-value {
+  background: var(--color-white) !important;
+  color: var(--color-dark) !important;
+  border-color: var(--color-success);
+}
+
+/**
+ * Special handling for the 'Total Days' field to make it look distinct
+ * as a calculated field while still being readable.
+ */
+#totalDays.has-value {
+  background: rgba(0, 230, 118, 0.1) !important; /* Light green tint */
+  color: var(--color-success) !important;
+  font-weight: 600;
+  border: 1px dashed var(--color-success);
+}
+
+/**
+ * Ensures the date picker icon remains visible/correctly colored
+ * when the background turns white.
+ */
+.input-group input[type="date"].has-value::-webkit-calendar-picker-indicator {
+  filter: invert(0); /* Keeps icon dark on white background */
+}
+
 /* ============================================================================
    WORKFLOW SECTION
    ============================================================================ */
