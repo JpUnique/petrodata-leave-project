@@ -1,0 +1,28 @@
+services:
+  # 1. The Go Web Application
+  - type: web
+    name: petrodata-portal
+    runtime: go
+    plan: free
+    buildCommand: go build -o main .
+    startCommand: ./main
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: petrodata-db
+          property: connectionString
+      - key: BREVO_API_KEY
+        sync: false # You will enter this manually in the Render dashboard for security
+      - key: SENDER_EMAIL
+        sync: false # The email address you authenticated in Brevo
+      - key: BASE_URL
+        sync: false # You will enter your https://...onrender.com link here after deployment
+
+databases:
+  # 2. The PostgreSQL Database
+  - name: petrodata-db
+    plan: free
+    databaseName: petrodata_leave
+    user: admin

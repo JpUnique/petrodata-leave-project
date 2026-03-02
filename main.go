@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -16,46 +15,42 @@ import (
 )
 
 func main() {
-	// 1. Load .env variables first!
-	// This ensures database.Connect() can see your DATABASE_URL
+	// 1. Load .env (local only)
 	if err := godotenv.Load(); err != nil {
 		log.Println("Note: .env file not found, using system environment variables")
 	}
 
-	// 2. Configuration
-	var addr string
-	flag.StringVar(&addr, "addr", "", "HTTP network address (e.g. :8080)")
-	flag.Parse()
-
-	if addr == "" {
-		if p := os.Getenv("PORT"); p != "" {
-			addr = ":" + p
-		} else {
-			addr = ":8080"
-		}
+	// 2. Dynamic Port for Render
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default for local testing
 	}
+	addr := ":" + port
 
-	// 3. Initialize PostgreSQL Database
+	// 3. Initialize Database
 	database.Connect()
 
 	// 4. Routing
 	mux := http.NewServeMux()
 
-	// Entry point: Serve Signup UI as the landing page
+	// Serve Static Files (CSS, JS, Images)
+	// This handles everything inside the /static folder automatically
+	fileServer := http.FileServer(http.Dir("./static"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
+
+	// Entry point: Landing page
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			http.ServeFile(w, r, "./static/signup.html")
 			return
 		}
-
-		// Check if file exists to avoid potential loops
+		// Fallback for other root-level HTML files
 		fpath := "./static" + r.URL.Path
 		if _, err := os.Stat(fpath); os.IsNotExist(err) {
 			http.NotFound(w, r)
 			return
 		}
-
-		http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
+		http.ServeFile(w, r, fpath)
 	})
 
 	// API Endpoints
@@ -70,36 +65,35 @@ func main() {
 	mux.HandleFunc("/api/leave/md-action", handlers.HandleMDAction)
 	mux.HandleFunc("/api/leave/final-details", handlers.GetFinalArchiveDetails)
 
-	// 5. Server Configuration
+	// 5. Server Setup
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  15 * time.Second, // Increased slightly for slower networks
+		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 
-	log.Printf("PetroData Portal is live at http://localhost%s", addr)
+	log.Printf("Server is starting on port %s...", port)
 
-	// Start server in a goroutine
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %v", err)
 		}
 	}()
 
-	// 6. Graceful Shutdown logic
+	// 6. Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	log.Println("Shutting down gracefully...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server stopped cleanly")
+	log.Println("Server exited")
 }

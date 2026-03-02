@@ -396,7 +396,7 @@ body {
   align-items: center;
   background: var(--color-white);
   border-radius: var(--border-radius);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--spacing-sm);
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
   transition: var(--transition-base);
