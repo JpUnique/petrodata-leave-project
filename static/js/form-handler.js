@@ -66,11 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // Updated to your local hosting URL
-      const response = await fetch("http://localhost:8080/api/leave/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "https://petrodata-leave-portal.onrender.comapi/leave/submit",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
 
       if (response.ok) {
         Swal.fire({
