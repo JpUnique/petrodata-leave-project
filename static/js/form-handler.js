@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Updated to your local hosting URL
       const response = await fetch(
-        "https://petrodata-leave-portal.onrender.comapi/leave/submit",
+        "https://petrodata-leave-portal.onrender.com/api/leave/submit",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const errorText = await response.text();
         throw new Error(errorText || "Server error");
       }
-    } catch (error) {
+    } catch (error) {f
       console.error("Submission Error:", error);
       Swal.fire(
         "Error",
