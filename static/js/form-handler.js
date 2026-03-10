@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Updated to your local hosting URL
       const response = await fetch(
-        "https://petrodata-leave-portal.onrender.com/api/leave/submit",
+        "https://petrodata-portal.onrender.com/api/leave/submit",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

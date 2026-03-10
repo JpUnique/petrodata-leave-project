@@ -12,6 +12,7 @@ import (
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
 	"github.com/JpUnique/petrodata-leave-project/pkg/handlers"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -65,10 +66,25 @@ func main() {
 	mux.HandleFunc("/api/leave/md-action", handlers.HandleMDAction)
 	mux.HandleFunc("/api/leave/final-details", handlers.GetFinalArchiveDetails)
 
+	// 5. Setup CORS
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{
+			"https://petrodata-portal.onrender.com",
+			"http://localhost:8080", // For local testing
+		},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+		Debug:            false, // Set to false in production
+	})
+
+	// 6. Wrap handler with CORS
+	handler := c.Handler(mux)
+
 	// 5. Server Setup
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      mux,
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second, // Increased slightly for slower networks
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  120 * time.Second,
