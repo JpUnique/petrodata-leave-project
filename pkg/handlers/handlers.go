@@ -11,7 +11,7 @@ import (
 
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
 	"github.com/JpUnique/petrodata-leave-project/pkg/models"
-	services "github.com/JpUnique/petrodata-leave-project/pkg/service"
+	"github.com/JpUnique/petrodata-leave-project/pkg/service"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,6 +39,7 @@ type ManagerActionRequest struct {
 	Token   string `json:"token"`
 	Status  string `json:"status"` // "Approved" or "Rejected"
 	HREmail string `json:"hr_email"`
+	Reason  string `json:"reason,omitempty"` // Required if rejected
 }
 
 // HRActionRequest represents the HR manager's approval/rejection decision.
@@ -46,12 +47,14 @@ type HRActionRequest struct {
 	Token   string `json:"token"`
 	Status  string `json:"status"` // "Approved" or "Rejected"
 	MDEmail string `json:"md_email"`
+	Reason  string `json:"reason,omitempty"` // Required if rejected
 }
 
 // MDActionRequest represents the Managing Director's final approval/rejection decision.
 type MDActionRequest struct {
 	Token  string `json:"token"`
-	Status string `json:"status"` // "Approved" or "Rejected"
+	Status string `json:"status"`           // "Approved" or "Rejected"
+	Reason string `json:"reason,omitempty"` // Required if rejected
 }
 
 // ============================================================================
@@ -74,19 +77,20 @@ const (
 
 // HTTP error message constants
 const (
-	ErrMethodNotAllowed   = "method not allowed"
-	ErrInvalidJSON        = "invalid JSON format"
-	ErrMissingToken       = "token is required"
-	ErrTokenNotFound      = "invalid or expired token"
-	ErrUserExists         = "user with this email already exists"
-	ErrHashPassword       = "failed to hash password"
-	ErrCreateUser         = "failed to create user"
-	ErrMalformedRequest   = "malformed request data"
-	ErrPersistRequest     = "failed to persist request"
-	ErrSaveAction         = "failed to save action"
-	ErrFinalizeRequest    = "failed to finalize request"
-	ErrInvalidCredentials = "invalid email or password"
-	ErrRequestNotFound    = "request not found"
+	ErrMethodNotAllowed       = "method not allowed"
+	ErrInvalidJSON            = "invalid JSON format"
+	ErrMissingToken           = "token is required"
+	ErrTokenNotFound          = "invalid or expired token"
+	ErrUserExists             = "user with this email already exists"
+	ErrHashPassword           = "failed to hash password"
+	ErrCreateUser             = "failed to create user"
+	ErrMalformedRequest       = "malformed request data"
+	ErrPersistRequest         = "failed to persist request"
+	ErrSaveAction             = "failed to save action"
+	ErrFinalizeRequest        = "failed to finalize request"
+	ErrInvalidCredentials     = "invalid email or password"
+	ErrRequestNotFound        = "request not found"
+	ErrMissingRejectionReason = "rejection reason is required"
 )
 
 // ============================================================================
@@ -247,7 +251,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // and sends an email notification to the staff member's manager.
 //
 // Request body should contain all LeaveRequest model fields including:
-// - staff_name, staff_no, designation, department
+// - staff_name, staff_email, staff_no, designation, department
 // - leave_type, start_date, resumption_date, total_days
 // - relief_staff, contact_address, manager_email
 //
@@ -262,6 +266,16 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&leaveReq); err != nil {
 		log.Printf("[ERROR] Failed to decode leave request body: %v", err)
 		respondError(w, http.StatusBadRequest, ErrMalformedRequest)
+		return
+	}
+
+	// Validate required fields
+	if leaveReq.StaffEmail == "" {
+		respondError(w, http.StatusBadRequest, "staff_email is required")
+		return
+	}
+	if leaveReq.ManagerEmail == "" {
+		respondError(w, http.StatusBadRequest, "manager_email is required")
 		return
 	}
 
@@ -284,7 +298,7 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Send manager notification email asynchronously
 	go func(emailAddr, name, token string) {
-		if err := services.SendToManager(emailAddr, name, token); err != nil {
+		if err := service.SendToManager(emailAddr, name, token); err != nil {
 			log.Printf("[ERROR] Manager email failed for %s: %v", name, err)
 		} else {
 			log.Printf("[INFO] Email successfully dispatched to Manager: %s", emailAddr)
@@ -420,17 +434,19 @@ func GetFinalArchiveDetails(w http.ResponseWriter, r *http.Request) {
 // Request body:
 // - token: Request token (required)
 // - status: "Approved" or "Rejected" (required)
-// - hr_email: HR manager's email address (required)
+// - hr_email: HR manager's email address (required for approval)
+// - reason: Rejection reason (required if status is "Rejected")
 //
 // Workflow:
-// 1. Records the manager's decision
-// 2. Sets appropriate status (Pending HR Review or Rejected by Manager)
-// 3. Generates a unique HR token
-// 4. Saves changes to database
-// 5. Sends email notification to HR manager
+// 1. Validates rejection reason if applicable
+// 2. Records the manager's decision
+// 3. Sets appropriate status (Pending HR Review or Rejected by Manager)
+// 4. Generates a unique HR token (for approvals) or notifies staff (for rejections)
+// 5. Saves changes to database
+// 6. Sends email notification to HR or staff
 //
 // Returns: Success message on completion
-// Side effect: Sends email to HR asynchronously
+// Side effect: Sends email asynchronously
 func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 	if !validateHTTPMethod(w, r.Method, http.MethodPost) {
 		return
@@ -440,6 +456,19 @@ func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("[ERROR] Failed to decode manager action request: %v", err)
 		respondError(w, http.StatusBadRequest, ErrInvalidJSON)
+		return
+	}
+
+	// Validate rejection reason if status is Rejected
+	if req.Status == StatusRejected && req.Reason == "" {
+		log.Printf("[WARN] Rejection attempted without reason for token: %s", req.Token)
+		respondError(w, http.StatusBadRequest, ErrMissingRejectionReason)
+		return
+	}
+
+	// Validate HR email if approving
+	if req.Status == StatusApproved && req.HREmail == "" {
+		respondError(w, http.StatusBadRequest, "hr_email is required for approval")
 		return
 	}
 
@@ -456,34 +485,58 @@ func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 	leaveReq.ManagerApproved = (req.Status == StatusApproved)
 	leaveReq.HREmail = req.HREmail
 
-	// Update status based on decision
+	// Handle approval path
 	if leaveReq.ManagerApproved {
 		leaveReq.Status = StatusPendingHRReview
-	} else {
-		leaveReq.Status = StatusRejectedByManager
+		leaveReq.HRToken = uuid.New().String()
+
+		// Save before sending email
+		if err := database.DB.Save(&leaveReq).Error; err != nil {
+			log.Printf("[ERROR] Failed to save manager approval: %v", err)
+			respondError(w, http.StatusInternalServerError, ErrSaveAction)
+			return
+		}
+
+		// Notify HR of approval
+		go func(hrEmail, staffName, token string) {
+			if err := service.SendToHR(hrEmail, staffName, token); err != nil {
+				log.Printf("[ERROR] Failed to send email to HR (%s): %v", hrEmail, err)
+			} else {
+				log.Printf("[INFO] HR notification sent for %s", staffName)
+			}
+		}(leaveReq.HREmail, leaveReq.StaffName, leaveReq.HRToken)
+
+		log.Printf("[INFO] Manager approved request for %s, forwarded to HR", leaveReq.StaffName)
+
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"message": "Request approved and forwarded to HR.",
+			"status":  leaveReq.Status,
+		})
+		return
 	}
 
-	// Generate unique token for HR access
-	leaveReq.HRToken = uuid.New().String()
+	// Handle rejection path
+	leaveReq.Status = StatusRejectedByManager
 
-	// Persist changes to database
 	if err := database.DB.Save(&leaveReq).Error; err != nil {
-		log.Printf("[ERROR] Failed to save manager action: %v", err)
+		log.Printf("[ERROR] Failed to save manager rejection: %v", err)
 		respondError(w, http.StatusInternalServerError, ErrSaveAction)
 		return
 	}
 
-	// Send email notification to HR asynchronously
-	go func(hrEmail, staffName, token string) {
-		if err := services.SendToHR(hrEmail, staffName, token); err != nil {
-			log.Printf("[ERROR] Failed to send email to HR (%s): %v", hrEmail, err)
+	// Notify staff of rejection
+	go func(staffEmail, staffName, reason string) {
+		if err := service.SendRejectionNotification(staffEmail, staffName, "Line Manager", reason); err != nil {
+			log.Printf("[ERROR] Failed to send rejection email to staff (%s): %v", staffEmail, err)
 		} else {
-			log.Printf("[INFO] HR notification sent for %s (Manager Decision: %s)", staffName, req.Status)
+			log.Printf("[INFO] Rejection notification sent to staff %s", staffName)
 		}
-	}(leaveReq.HREmail, leaveReq.StaffName, leaveReq.HRToken)
+	}(leaveReq.StaffEmail, leaveReq.StaffName, req.Reason)
+
+	log.Printf("[INFO] Manager rejected request for %s, staff notified", leaveReq.StaffName)
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "Action recorded; HR has been notified of the decision.",
+		"message": "Request rejected. Staff has been notified.",
 		"status":  leaveReq.Status,
 	})
 }
@@ -494,17 +547,19 @@ func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 // Request body:
 // - token: HR token (required)
 // - status: "Approved" or "Rejected" (required)
-// - md_email: Managing Director's email address (required)
+// - md_email: Managing Director's email address (required for approval)
+// - reason: Rejection reason (required if status is "Rejected")
 //
 // Workflow:
-// 1. Records the HR's decision
-// 2. Sets appropriate status (Pending MD Final Approval or Rejected by HR)
-// 3. Generates a unique MD token
-// 4. Saves changes to database
-// 5. Sends email notification to MD
+// 1. Validates rejection reason if applicable
+// 2. Records the HR's decision
+// 3. Sets appropriate status (Pending MD Final Approval or Rejected by HR)
+// 4. Generates a unique MD token (for approvals) or notifies staff (for rejections)
+// 5. Saves changes to database
+// 6. Sends email notification to MD or staff
 //
 // Returns: Success message on completion
-// Side effect: Sends email to MD asynchronously
+// Side effect: Sends email asynchronously
 func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
 	if !validateHTTPMethod(w, r.Method, http.MethodPost) {
 		return
@@ -514,6 +569,19 @@ func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("[ERROR] Failed to decode HR action request: %v", err)
 		respondError(w, http.StatusBadRequest, ErrInvalidJSON)
+		return
+	}
+
+	// Validate rejection reason if status is Rejected
+	if req.Status == StatusRejected && req.Reason == "" {
+		log.Printf("[WARN] HR rejection attempted without reason for token: %s", req.Token)
+		respondError(w, http.StatusBadRequest, ErrMissingRejectionReason)
+		return
+	}
+
+	// Validate MD email if approving
+	if req.Status == StatusApproved && req.MDEmail == "" {
+		respondError(w, http.StatusBadRequest, "md_email is required for approval")
 		return
 	}
 
@@ -530,54 +598,79 @@ func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
 	leaveReq.HRApproved = (req.Status == StatusApproved)
 	leaveReq.MDEmail = req.MDEmail
 
-	// Update status based on decision
+	// Handle approval path
 	if leaveReq.HRApproved {
 		leaveReq.Status = StatusPendingMDApproval
-	} else {
-		leaveReq.Status = StatusRejectedByHR
+		leaveReq.MDToken = uuid.New().String()
+
+		if err := database.DB.Save(&leaveReq).Error; err != nil {
+			log.Printf("[ERROR] Failed to save HR approval: %v", err)
+			respondError(w, http.StatusInternalServerError, ErrSaveAction)
+			return
+		}
+
+		// Notify MD of approval
+		go func(mdEmail, staffName, token string) {
+			if err := service.SendToMD(mdEmail, staffName, token); err != nil {
+				log.Printf("[ERROR] Failed to send email to MD (%s): %v", mdEmail, err)
+			} else {
+				log.Printf("[INFO] MD notification sent for %s", staffName)
+			}
+		}(leaveReq.MDEmail, leaveReq.StaffName, leaveReq.MDToken)
+
+		log.Printf("[INFO] HR approved request for %s, forwarded to MD", leaveReq.StaffName)
+
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"message": "HR approved. Request forwarded to MD for final action.",
+			"status":  leaveReq.Status,
+		})
+		return
 	}
 
-	// Generate unique token for MD access
-	leaveReq.MDToken = uuid.New().String()
+	// Handle rejection path
+	leaveReq.Status = StatusRejectedByHR
 
-	// Persist changes to database
 	if err := database.DB.Save(&leaveReq).Error; err != nil {
-		log.Printf("[ERROR] Failed to save HR action: %v", err)
+		log.Printf("[ERROR] Failed to save HR rejection: %v", err)
 		respondError(w, http.StatusInternalServerError, ErrSaveAction)
 		return
 	}
 
-	// Send email notification to MD asynchronously
-	go func(mdEmail, staffName, token string) {
-		if err := services.SendToMD(mdEmail, staffName, token); err != nil {
-			log.Printf("[ERROR] Failed to send email to MD (%s): %v", mdEmail, err)
+	// Notify staff of rejection
+	go func(staffEmail, staffName, reason string) {
+		if err := service.SendRejectionNotification(staffEmail, staffName, "HR Department", reason); err != nil {
+			log.Printf("[ERROR] Failed to send rejection email to staff (%s): %v", staffEmail, err)
 		} else {
-			log.Printf("[INFO] MD notification sent for %s (HR Decision: %s)", staffName, req.Status)
+			log.Printf("[INFO] HR rejection notification sent to staff %s", staffName)
 		}
-	}(leaveReq.MDEmail, leaveReq.StaffName, leaveReq.MDToken)
+	}(leaveReq.StaffEmail, leaveReq.StaffName, req.Reason)
 
-	respondJSON(w, http.StatusOK, map[string]string{
-		"message": "HR decision recorded; request forwarded to MD for final action.",
+	log.Printf("[INFO] HR rejected request for %s, staff notified", leaveReq.StaffName)
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "Request rejected by HR. Staff has been notified.",
+		"status":  leaveReq.Status,
 	})
 }
 
 // HandleMDAction processes the Managing Director's final approval or rejection decision.
-// This is the final step in the approval workflow. Updates the request status
-// and sends the finalized request back to HR for archival and record-keeping.
+// This is the final step in the approval workflow.
 //
 // Request body:
 // - token: MD token (required)
 // - status: "Approved" or "Rejected" (required)
+// - reason: Rejection reason (required if status is "Rejected")
 //
 // Workflow:
-// 1. Records the MD's final decision
-// 2. Sets final status (Fully Approved or Rejected by MD)
-// 3. Generates a final archive token for HR records
-// 4. Saves changes to database
-// 5. Sends email notification to HR with archive link
+// 1. Validates rejection reason if applicable
+// 2. Records the MD's final decision
+// 3. Sets final status (Fully Approved or Rejected by MD)
+// 4. Generates a final archive token (for approvals) or notifies staff (for rejections)
+// 5. Saves changes to database
+// 6. Sends email notification to HR or staff
 //
 // Returns: Final status message on completion
-// Side effect: Sends email to HR asynchronously
+// Side effect: Sends email asynchronously
 func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 	if !validateHTTPMethod(w, r.Method, http.MethodPost) {
 		return
@@ -587,6 +680,13 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("[ERROR] Failed to decode MD action request: %v", err)
 		respondError(w, http.StatusBadRequest, ErrInvalidJSON)
+		return
+	}
+
+	// Validate rejection reason if status is Rejected
+	if req.Status == StatusRejected && req.Reason == "" {
+		log.Printf("[WARN] MD rejection attempted without reason for token: %s", req.Token)
+		respondError(w, http.StatusBadRequest, ErrMissingRejectionReason)
 		return
 	}
 
@@ -602,34 +702,57 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 	leaveReq.MDDecision = req.Status
 	leaveReq.MDApproved = (req.Status == StatusApproved)
 
-	// Set the final status
+	// Handle approval path
 	if leaveReq.MDApproved {
 		leaveReq.Status = StatusFullyApproved
-	} else {
-		leaveReq.Status = StatusRejectedByMD
+		leaveReq.FinalHRToken = uuid.New().String()
+
+		if err := database.DB.Save(&leaveReq).Error; err != nil {
+			log.Printf("[ERROR] Failed to finalize request: %v", err)
+			respondError(w, http.StatusInternalServerError, ErrFinalizeRequest)
+			return
+		}
+
+		// Notify HR of final approval
+		go func(hrEmail, staffName, token string) {
+			if err := service.SendFinalArchiveToHR(hrEmail, staffName, token); err != nil {
+				log.Printf("[ERROR] Failed to send final archive email to HR (%s): %v", hrEmail, err)
+			} else {
+				log.Printf("[INFO] Final archive notification sent for %s", staffName)
+			}
+		}(leaveReq.HREmail, leaveReq.StaffName, leaveReq.FinalHRToken)
+
+		log.Printf("[INFO] MD approved request for %s, workflow complete", leaveReq.StaffName)
+
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"message": "Leave request fully approved. HR has been notified.",
+			"status":  leaveReq.Status,
+		})
+		return
 	}
 
-	// Generate unique token for HR archive access
-	leaveReq.FinalHRToken = uuid.New().String()
+	// Handle rejection path
+	leaveReq.Status = StatusRejectedByMD
 
-	// Persist finalized record to database
 	if err := database.DB.Save(&leaveReq).Error; err != nil {
-		log.Printf("[ERROR] Failed to finalize request: %v", err)
+		log.Printf("[ERROR] Failed to save MD rejection: %v", err)
 		respondError(w, http.StatusInternalServerError, ErrFinalizeRequest)
 		return
 	}
 
-	// Send final archive notification to HR asynchronously
-	go func(hrEmail, staffName, token string) {
-		if err := services.SendFinalArchiveToHR(hrEmail, staffName, token); err != nil {
-			log.Printf("[ERROR] Failed to send final archive email to HR (%s): %v", hrEmail, err)
+	// Notify staff of final rejection
+	go func(staffEmail, staffName, reason string) {
+		if err := service.SendRejectionNotification(staffEmail, staffName, "Managing Director", reason); err != nil {
+			log.Printf("[ERROR] Failed to send rejection email to staff (%s): %v", staffEmail, err)
 		} else {
-			log.Printf("[INFO] Workflow finalized for %s. Archive notification sent to HR.", staffName)
+			log.Printf("[INFO] MD rejection notification sent to staff %s", staffName)
 		}
-	}(leaveReq.HREmail, leaveReq.StaffName, leaveReq.FinalHRToken)
+	}(leaveReq.StaffEmail, leaveReq.StaffName, req.Reason)
 
-	respondJSON(w, http.StatusOK, map[string]string{
-		"message": "Leave request finalized. HR has been notified of the completion.",
+	log.Printf("[INFO] MD rejected request for %s, staff notified", leaveReq.StaffName)
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "Request rejected by MD. Staff has been notified.",
 		"status":  leaveReq.Status,
 	})
 }

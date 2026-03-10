@@ -14,6 +14,7 @@ type User struct {
 type LeaveRequest struct {
 	ID             uint   `gorm:"primaryKey" json:"id"`
 	StaffName      string `json:"staff_name"`
+	StaffEmail     string `json:"staff_email"`
 	StaffNo        string `json:"staff_no"`
 	Designation    string `json:"designation"`
 	Department     string `json:"department"`
