@@ -23,10 +23,10 @@ var (
 
 func init() {
 	// Initialize MailerSend client with API key from environment
-	apiKey := os.Getenv("MAILERSEND_API_KEY")
-	if apiKey == "" {
-		panic("MAILERSEND_API_KEY environment variable is required")
-	}
+	apiKey := os.Getenv("MAILER_SEND_API_KEY")
+	// if apiKey == "" {
+	// 	panic("MAILER_SEND_API_KEY environment variable is required")
+	// }
 
 	mailerSendClient = mailersend.NewMailersend(apiKey)
 
