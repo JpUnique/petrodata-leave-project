@@ -11,6 +11,7 @@ import (
 
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
 	"github.com/JpUnique/petrodata-leave-project/pkg/handlers"
+	"github.com/JpUnique/petrodata-leave-project/pkg/middleware"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
@@ -57,7 +58,7 @@ func main() {
 	// API Endpoints
 	mux.HandleFunc("/api/signup", handlers.Signup)
 	mux.HandleFunc("/api/login", handlers.Login)
-	mux.HandleFunc("/api/leave/submit", handlers.SubmitLeaveRequest)
+	mux.HandleFunc("/api/leave/submit", middleware.Auth(handlers.SubmitLeaveRequest))
 	mux.HandleFunc("/api/leave/details", handlers.GetLeaveRequestByToken)
 	mux.HandleFunc("/api/leave/action", handlers.HandleLineManagerAction)
 	mux.HandleFunc("/api/leave/hr-details", handlers.GetLeaveRequestByHRToken)

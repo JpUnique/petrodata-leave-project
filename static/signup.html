@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Create your PetroData Staff Portal account to manage your leave requests"
-    />
+    <meta name="description" content="PetroData Staff LeavePortal" />
     <meta name="theme-color" content="#004d40" />
     <title>Register | PetroData Leave Portal</title>
 
@@ -67,7 +64,7 @@
               required
             />
           </div>
-          
+
           <!-- Phone input group -->
           <div class="input-wrapper">
             <label for="phone" class="sr-only">Phone number</label>
@@ -78,6 +75,21 @@
               name="phone"
               placeholder="Phone Number (e.g. 080...)"
               aria-label="Phone number"
+              aria-required="true"
+              required
+            />
+          </div>
+
+          <!-- STAFF NUMBER INPUT - ADDED HERE -->
+          <div class="input-wrapper">
+            <label for="staffNo" class="sr-only">Staff number</label>
+            <i class="fas fa-id-badge" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="staffNo"
+              name="staffNo"
+              placeholder="Staff Number (e.g. EMP00123)"
+              aria-label="Staff number"
               aria-required="true"
               required
             />

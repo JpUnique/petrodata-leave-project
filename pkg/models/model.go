@@ -8,6 +8,7 @@ type User struct {
 	Email       string    `json:"email"`
 	Password    string    `json:"password"`
 	PhoneNumber string    `json:"phone_number"`
+	StaffNo     string    `gorm:"uniqueIndex" json:"staff_no"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
@@ -44,10 +45,10 @@ type LeaveRequest struct {
 	MDApproved      bool `gorm:"default:false" json:"md_approved"`
 
 	// Security Tokens for the Links
-	RequestToken string `gorm:"uniqueIndex" json:"request_token"`  // Manager's link
-	HRToken      string `gorm:"uniqueIndex" json:"hr_token"`       // HR's link
-	MDToken      string `gorm:"uniqueIndex" json:"md_token"`       // MD's link (Added)
-	FinalHRToken string `gorm:"uniqueIndex" json:"final_hr_token"` // Added for the Archive/PDF page
+	RequestToken *string `gorm:"uniqueIndex" json:"request_token"` // Manager's link
+	HRToken      *string `json:"hr_token"`                         // HR's link
+	MDToken      *string `json:"md_token"`                         // MD's link (Added)
+	FinalHRToken *string `json:"final_hr_token"`                   // Added for the Archive/PDF page
 
 	CreatedAt time.Time `json:"created_at"`
 }

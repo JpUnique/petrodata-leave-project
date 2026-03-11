@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
 	"github.com/JpUnique/petrodata-leave-project/pkg/models"
 	"github.com/JpUnique/petrodata-leave-project/pkg/service"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,6 +28,7 @@ type SignupRequest struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 	PhoneNumber string `json:"phone_number"`
+	StaffNo     string `json:"staff_no"`
 }
 
 // LoginRequest represents the user login request payload.
@@ -132,6 +135,19 @@ func validateHTTPMethod(w http.ResponseWriter, method, allowedMethod string) boo
 	return true
 }
 
+// // toPtr converts string to *string
+// func toPtr(s string) *string {
+// 	return &s
+// }
+
+// // fromPtr safely converts *string to string (handles nil)
+// func fromPtr(s *string) string {
+// 	if s == nil {
+// 		return ""
+// 	}
+// 	return *s
+// }
+
 // ============================================================================
 // AUTHENTICATION HANDLERS
 // ============================================================================
@@ -181,6 +197,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		Email:       req.Email,
 		Password:    string(hashedPassword),
 		PhoneNumber: req.PhoneNumber,
+		StaffNo:     req.StaffNo,
 		CreatedAt:   time.Now(),
 	}
 
@@ -193,9 +210,10 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] User registered successfully: %s (%s)", user.FullName, user.Email)
 
 	respondJSON(w, http.StatusCreated, map[string]interface{}{
-		"message": fmt.Sprintf("Registration successful for %s", user.FullName),
-		"user_id": user.ID,
-		"email":   user.Email,
+		"message":  fmt.Sprintf("Registration successful for %s", user.FullName),
+		"user_id":  user.ID,
+		"email":    user.Email,
+		"staff_no": user.StaffNo,
 	})
 }
 
@@ -234,12 +252,47 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate JWT token
+	token, err := generateJWT(user)
+	if err != nil {
+		log.Printf("[ERROR] Failed to generate JWT: %v", err)
+		respondError(w, http.StatusInternalServerError, "Authentication error")
+		return
+	}
+
 	log.Printf("[INFO] User logged in successfully: %s", user.Email)
 
-	respondJSON(w, http.StatusOK, map[string]string{
-		"message": "login successful",
-		"user":    user.FullName,
+	// Return token + user data
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"message":  "Login successful",
+		"token":    token,
+		"user":     user.FullName,
+		"email":    user.Email,
+		"staff_no": user.StaffNo,
 	})
+}
+
+// generateJWT creates a signed JWT token for the user
+func generateJWT(user models.User) (string, error) {
+	// Create claims with user data
+	claims := jwt.MapClaims{
+		"email":    user.Email,
+		"name":     user.FullName,
+		"staff_no": user.StaffNo,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+		"iat":      time.Now().Unix(),
+	}
+
+	// Create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign token with secret
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 // ============================================================================
@@ -262,32 +315,73 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var leaveReq models.LeaveRequest
-	if err := json.NewDecoder(r.Body).Decode(&leaveReq); err != nil {
+	// Get authenticated user from context (set by your auth middleware)
+	userEmail, ok := r.Context().Value("userEmail").(string)
+	if !ok || userEmail == "" {
+		respondError(w, http.StatusUnauthorized, "Unauthorized: email not found in session")
+		return
+	}
+
+	userName, _ := r.Context().Value("userName").(string)
+	userStaffNo, _ := r.Context().Value("userStaffNo").(string)
+
+	var reqBody struct {
+		Designation    string `json:"designation"`
+		Department     string `json:"department"`
+		LeaveType      string `json:"leave_type"`
+		StartDate      string `json:"start_date"`
+		ResumptionDate string `json:"resumption_date"`
+		TotalDays      int    `json:"total_days"`
+		ReliefStaff    string `json:"relief_staff"`
+		ContactAddress string `json:"contact_address"`
+		ManagerEmail   string `json:"manager_email"`
+		// Don't accept StaffEmail, StaffName, StaffNo from client
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		log.Printf("[ERROR] Failed to decode leave request body: %v", err)
 		respondError(w, http.StatusBadRequest, ErrMalformedRequest)
 		return
 	}
 
-	// // Validate required fields
-	// if leaveReq.StaffEmail == "" {
-	// 	respondError(w, http.StatusBadRequest, "staff_email is required")
-	// 	return
-	// }
-	if leaveReq.ManagerEmail == "" {
+	// Validate required fields
+	if reqBody.ManagerEmail == "" {
 		respondError(w, http.StatusBadRequest, "manager_email is required")
 		return
 	}
 
-	// Initialize request with defaults
-	leaveReq.RequestToken = uuid.New().String()
-	leaveReq.CreatedAt = time.Now()
-	leaveReq.Status = StatusPending
-	leaveReq.ManagerApproved = false
-	leaveReq.HRApproved = false
-	leaveReq.MDApproved = false
+	// Helper to create *string from string
+	stringPtr := func(s string) *string { return &s }
 
-	log.Printf("[INFO] Attempting to save leave request for Staff: %s (Token: %s)", leaveReq.StaffName, leaveReq.RequestToken)
+	// Generate tokens
+	reqToken := uuid.New().String()
+
+	// Build leave request with data from AUTHENTICATED session (not client)
+	leaveReq := models.LeaveRequest{
+		StaffName:       userName,    // From auth context
+		StaffEmail:      userEmail,   // From auth context - TRUSTED
+		StaffNo:         userStaffNo, // From auth context
+		Designation:     reqBody.Designation,
+		Department:      reqBody.Department,
+		LeaveType:       reqBody.LeaveType,
+		StartDate:       reqBody.StartDate,
+		ResumptionDate:  reqBody.ResumptionDate,
+		TotalDays:       reqBody.TotalDays,
+		ReliefStaff:     reqBody.ReliefStaff,
+		ContactAddress:  reqBody.ContactAddress,
+		ManagerEmail:    reqBody.ManagerEmail,
+		Status:          StatusPending,
+		ManagerApproved: false,
+		HRApproved:      false,
+		MDApproved:      false,
+		RequestToken:    stringPtr(reqToken), // ✓ Now *string
+		HRToken:         nil,                 // ✓ NULL in DB
+		MDToken:         nil,                 // ✓ NULL in DB
+		FinalHRToken:    nil,                 // ✓ NULL in DB
+		CreatedAt:       time.Now(),
+	}
+
+	log.Printf("[INFO] Attempting to save leave request for Staff: %s (Token: %s)", leaveReq.StaffName, reqToken)
 
 	// Persist request to database
 	if err := database.DB.Create(&leaveReq).Error; err != nil {
@@ -297,17 +391,18 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send manager notification email asynchronously
+	// Dereference *string for the email function
 	go func(emailAddr, name, token string) {
 		if err := service.SendToManager(emailAddr, name, token); err != nil {
 			log.Printf("[ERROR] Manager email failed for %s: %v", name, err)
 		} else {
 			log.Printf("[INFO] Email successfully dispatched to Manager: %s", emailAddr)
 		}
-	}(leaveReq.ManagerEmail, leaveReq.StaffName, leaveReq.RequestToken)
+	}(leaveReq.ManagerEmail, leaveReq.StaffName, reqToken)
 
 	respondJSON(w, http.StatusAccepted, map[string]interface{}{
 		"message":       fmt.Sprintf("Leave request submitted successfully for %s", leaveReq.StaffName),
-		"request_token": leaveReq.RequestToken,
+		"request_token": reqToken, // ✓ Use string variable
 		"status":        leaveReq.Status,
 	})
 }
@@ -488,7 +583,8 @@ func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 	// Handle approval path
 	if leaveReq.ManagerApproved {
 		leaveReq.Status = StatusPendingHRReview
-		leaveReq.HRToken = uuid.New().String()
+		hrTokenStr := uuid.New().String()
+		leaveReq.HRToken = &hrTokenStr
 
 		// Save before sending email
 		if err := database.DB.Save(&leaveReq).Error; err != nil {
@@ -504,7 +600,7 @@ func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 			} else {
 				log.Printf("[INFO] HR notification sent for %s", staffName)
 			}
-		}(leaveReq.HREmail, leaveReq.StaffName, leaveReq.HRToken)
+		}(leaveReq.HREmail, leaveReq.StaffName, hrTokenStr)
 
 		log.Printf("[INFO] Manager approved request for %s, forwarded to HR", leaveReq.StaffName)
 
@@ -601,7 +697,8 @@ func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
 	// Handle approval path
 	if leaveReq.HRApproved {
 		leaveReq.Status = StatusPendingMDApproval
-		leaveReq.MDToken = uuid.New().String()
+		MDTokenStr := uuid.New().String()
+		leaveReq.MDToken = &MDTokenStr
 
 		if err := database.DB.Save(&leaveReq).Error; err != nil {
 			log.Printf("[ERROR] Failed to save HR approval: %v", err)
@@ -616,7 +713,7 @@ func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
 			} else {
 				log.Printf("[INFO] MD notification sent for %s", staffName)
 			}
-		}(leaveReq.MDEmail, leaveReq.StaffName, leaveReq.MDToken)
+		}(leaveReq.MDEmail, leaveReq.StaffName, MDTokenStr)
 
 		log.Printf("[INFO] HR approved request for %s, forwarded to MD", leaveReq.StaffName)
 
@@ -705,7 +802,8 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 	// Handle approval path
 	if leaveReq.MDApproved {
 		leaveReq.Status = StatusFullyApproved
-		leaveReq.FinalHRToken = uuid.New().String()
+		FinalHRTokenStr := uuid.New().String()
+		leaveReq.FinalHRToken = &FinalHRTokenStr
 
 		if err := database.DB.Save(&leaveReq).Error; err != nil {
 			log.Printf("[ERROR] Failed to finalize request: %v", err)
@@ -720,7 +818,7 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 			} else {
 				log.Printf("[INFO] Final archive notification sent for %s", staffName)
 			}
-		}(leaveReq.HREmail, leaveReq.StaffName, leaveReq.FinalHRToken)
+		}(leaveReq.HREmail, leaveReq.StaffName, FinalHRTokenStr)
 
 		log.Printf("[INFO] MD approved request for %s, workflow complete", leaveReq.StaffName)
 

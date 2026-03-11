@@ -19,6 +19,7 @@ const CONFIG = {
     FULL_NAME: "fullName",
     SIGNUP_EMAIL: "signupEmail",
     PHONE: "phone",
+    STAFF_NO: "staffNo", // ← ADD THIS
     SIGNUP_PASS: "signupPass",
     LOGIN_EMAIL: "loginEmail",
     LOGIN_PASS: "loginPass",
@@ -26,8 +27,10 @@ const CONFIG = {
     TOGGLE_LOGIN_PASS: "toggleLoginPass",
   },
   STORAGE: {
+    AUTH_TOKEN: "authToken", // ← ADD THIS (JWT token)
     USER_NAME: "userName",
     USER_EMAIL: "userEmail",
+    STAFF_NO: "staffNo", // ← ADD THIS
   },
   COLORS: {
     SUCCESS: "#00e676",
@@ -125,21 +128,43 @@ function trimInput(value) {
 }
 
 /**
- * Save user data to localStorage
+ * Save user data to localStorage including JWT token
  * @param {string} name - User full name
  * @param {string} email - User email
+ * @param {string} token - JWT auth token
+ * @param {string} staffNo - Staff number
  */
-function saveUserToStorage(name, email) {
+function saveUserToStorage(name, email, token, staffNo) {
+  localStorage.setItem(CONFIG.STORAGE.AUTH_TOKEN, token);
   localStorage.setItem(CONFIG.STORAGE.USER_NAME, name);
   localStorage.setItem(CONFIG.STORAGE.USER_EMAIL, email);
+  localStorage.setItem(CONFIG.STORAGE.STAFF_NO, staffNo || "");
 }
 
 /**
  * Clear user data from localStorage
  */
 function clearUserFromStorage() {
+  localStorage.removeItem(CONFIG.STORAGE.AUTH_TOKEN);
   localStorage.removeItem(CONFIG.STORAGE.USER_NAME);
   localStorage.removeItem(CONFIG.STORAGE.USER_EMAIL);
+  localStorage.removeItem(CONFIG.STORAGE.STAFF_NO);
+}
+
+/**
+ * Get auth token from storage
+ * @returns {string|null} JWT token or null
+ */
+function getAuthToken() {
+  return localStorage.getItem(CONFIG.STORAGE.AUTH_TOKEN);
+}
+
+/**
+ * Check if user is authenticated
+ * @returns {boolean} True if token exists
+ */
+function isAuthenticated() {
+  return !!getAuthToken();
 }
 
 /**
@@ -148,6 +173,36 @@ function clearUserFromStorage() {
  */
 function navigateTo(page) {
   window.location.href = page;
+}
+
+/**
+ * Make authenticated API request
+ * @param {string} url - API endpoint
+ * @param {Object} options - Fetch options
+ * @returns {Promise} Fetch promise
+ */
+async function authFetch(url, options = {}) {
+  const token = getAuthToken();
+
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
+
+  const defaultOptions = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  // Merge headers
+  if (options.headers) {
+    options.headers = { ...defaultOptions.headers, ...options.headers };
+  } else {
+    options.headers = defaultOptions.headers;
+  }
+
+  return fetch(url, { ...defaultOptions, ...options });
 }
 
 // ============================================================================
@@ -190,9 +245,10 @@ function setupPasswordToggle(toggleIconId, inputId) {
  * @returns {Object|null} Validated form data or null if invalid
  */
 function validateSignupForm(elements) {
-  const { nameEl, emailEl, phoneEl, passwordEl } = elements;
+  const { nameEl, emailEl, phoneEl, staffNoEl, passwordEl } = elements; // ← Add staffNoEl
 
-  if (!nameEl || !emailEl || !phoneEl || !passwordEl) {
+  if (!nameEl || !emailEl || !phoneEl || !staffNoEl || !passwordEl) {
+    // ← Check staffNoEl
     console.error("Signup form elements not found");
     return null;
   }
@@ -200,6 +256,7 @@ function validateSignupForm(elements) {
   const fullName = trimInput(nameEl.value);
   const email = trimInput(emailEl.value);
   const phoneNumber = trimInput(phoneEl.value);
+  const staffNo = trimInput(staffNoEl.value); // ← Get staffNo
   const password = trimInput(passwordEl.value);
 
   // Validate domain
@@ -212,10 +269,21 @@ function validateSignupForm(elements) {
     return null;
   }
 
+  // Validate staff number
+  if (!staffNo) {
+    showAlert(
+      "warning",
+      "Missing Staff Number",
+      "Please enter your staff number.",
+    );
+    return null;
+  }
+
   return {
     fullName,
     email,
     phoneNumber,
+    staffNo, // ← Return staffNo
     password,
   };
 }
@@ -237,6 +305,7 @@ async function handleSignup(event) {
     nameEl: getElement(CONFIG.DOM_IDS.FULL_NAME),
     emailEl: getElement(CONFIG.DOM_IDS.SIGNUP_EMAIL),
     phoneEl: getElement(CONFIG.DOM_IDS.PHONE),
+    staffNoEl: getElement(CONFIG.DOM_IDS.STAFF_NO), // ← Add this
     passwordEl: getElement(CONFIG.DOM_IDS.SIGNUP_PASS),
   });
 
@@ -257,12 +326,22 @@ async function handleSignup(event) {
         full_name: formData.fullName,
         email: formData.email,
         phone_number: formData.phoneNumber,
+        staff_no: formData.staffNo, // ← Send staff_no
         password: formData.password,
       }),
     });
 
     if (response.ok) {
-      saveUserToStorage(formData.fullName, formData.email);
+      const result = await response.json();
+
+      // Note: Signup doesn't return token, user must login
+      // Store minimal info for convenience
+      localStorage.setItem(CONFIG.STORAGE.USER_NAME, formData.fullName);
+      localStorage.setItem(CONFIG.STORAGE.USER_EMAIL, formData.email);
+      localStorage.setItem(
+        CONFIG.STORAGE.STAFF_NO,
+        result.staff_no || formData.staffNo,
+      );
 
       await showAlert(
         "success",
@@ -270,7 +349,7 @@ async function handleSignup(event) {
         CONFIG.MESSAGES.SIGNUP.SUCCESS_MSG(formData.fullName),
       );
 
-      navigateTo(CONFIG.PAGES.LEAVE_FORM);
+      navigateTo(CONFIG.PAGES.LOGIN); // ← Redirect to login, not leave form
     } else {
       const errorData = await response.json();
       showAlert(
@@ -350,7 +429,14 @@ async function handleLogin(event) {
 
     if (response.ok) {
       const result = await response.json();
-      saveUserToStorage(result.user || result.full_name, formData.email);
+
+      // ← UPDATED: Store JWT token and all user data
+      saveUserToStorage(
+        result.user || result.full_name,
+        result.email,
+        result.token, // ← JWT token from backend
+        result.staff_no, // ← Staff number from backend
+      );
 
       await showAlert(
         "success",
@@ -361,10 +447,11 @@ async function handleLogin(event) {
 
       navigateTo(CONFIG.PAGES.LEAVE_FORM);
     } else {
+      const errorData = await response.json();
       showAlert(
         "error",
         CONFIG.MESSAGES.LOGIN.FAILED,
-        CONFIG.MESSAGES.LOGIN.FAILED_MSG,
+        errorData.error || CONFIG.MESSAGES.LOGIN.FAILED_MSG,
       );
     }
   } catch (error) {
