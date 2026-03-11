@@ -269,11 +269,11 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
-	if leaveReq.StaffEmail == "" {
-		respondError(w, http.StatusBadRequest, "staff_email is required")
-		return
-	}
+	// // Validate required fields
+	// if leaveReq.StaffEmail == "" {
+	// 	respondError(w, http.StatusBadRequest, "staff_email is required")
+	// 	return
+	// }
 	if leaveReq.ManagerEmail == "" {
 		respondError(w, http.StatusBadRequest, "manager_email is required")
 		return

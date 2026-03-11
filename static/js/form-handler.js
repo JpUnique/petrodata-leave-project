@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const errorText = await response.text();
         throw new Error(errorText || "Server error");
       }
-    } catch (error) {f
+    } catch (error) {
       console.error("Submission Error:", error);
       Swal.fire(
         "Error",
