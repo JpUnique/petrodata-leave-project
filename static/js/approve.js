@@ -279,7 +279,7 @@ async function processDecision(token, decision, staffName) {
     const payload = {
       token,
       status: decision,
-      hr_email: hrEmail,
+      resource_email: hrEmail,
     };
 
     const response = await fetch(CONFIG.API.SUBMIT_ACTION, {
