@@ -781,13 +781,6 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate rejection reason if status is Rejected
-	if req.Status == StatusRejected && req.Reason == "" {
-		log.Printf("[WARN] MD rejection attempted without reason for token: %s", req.Token)
-		respondError(w, http.StatusBadRequest, ErrMissingRejectionReason)
-		return
-	}
-
 	// Retrieve the leave request
 	var leaveReq models.LeaveRequest
 	if err := database.DB.Where("director_token = ?", req.Token).First(&leaveReq).Error; err != nil {

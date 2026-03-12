@@ -55,8 +55,9 @@ function getUrlParameter(param) {
 }
 
 function getDecisionColor(decision) {
-  // Handles "Approved" vs others
-  return decision === "Approved" ? CONFIG.COLORS.SUCCESS : CONFIG.COLORS.ERROR;
+  return decision === CONFIG.STATUS.APPROVED
+    ? CONFIG.COLORS.SUCCESS
+    : CONFIG.COLORS.ERROR;
 }
 
 // ============================================================================
@@ -89,7 +90,6 @@ function populateUI(data) {
   }
 
   displayAuditTrail(data);
-  handleFinalizedRequests(data);
 }
 
 function displayAuditTrail(data) {
@@ -105,24 +105,6 @@ function displayAuditTrail(data) {
     const decision = data.resource_decision || "Pending";
     hrField.textContent = decision;
     hrField.style.color = getDecisionColor(decision);
-  }
-}
-
-function handleFinalizedRequests(data) {
-  // If the status isn't pending MD review, the workflow is already over
-  if (data.status === CONFIG.STATUS.PENDING_MD_REVIEW) return;
-
-  const actions = getElement("actionButtons");
-  if (actions) actions.style.display = "none";
-
-  const statusBanner = getElement("statusMessage");
-  if (statusBanner) {
-    statusBanner.classList.remove("hidden");
-    statusBanner.innerHTML = `
-      <i class="fas fa-check-double"></i>
-      This request was finalized as <strong>${data.status}</strong>.
-      The audit trail is now closed.
-    `;
   }
 }
 
@@ -151,38 +133,18 @@ function toggleLoading(decision, isLoading) {
 }
 
 async function processFinalDecision(token, decision, staffName) {
-  let reason = "";
+  // Simple confirmation for both Approve and Reject
+  const confirmResult = await Swal.fire({
+    title: `Confirm ${decision}?`,
+    text: `Are you sure you want to ${decision.toLowerCase()} the request for ${staffName}?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: getDecisionColor(decision),
+    cancelButtonColor: CONFIG.COLORS.NEUTRAL,
+    confirmButtonText: "Yes, Proceed",
+  });
 
-  // 1. COLLECT REASON IF REJECTED (Required by Go backend)
-  if (decision === CONFIG.STATUS.REJECTED) {
-    const { value: text, isConfirmed } = await Swal.fire({
-      title: "Rejection Reason",
-      input: "textarea",
-      inputLabel: "Please explain why this request is being rejected.",
-      inputPlaceholder: "Required for notification to staff...",
-      showCancelButton: true,
-      confirmButtonColor: CONFIG.COLORS.ERROR,
-      cancelButtonColor: CONFIG.COLORS.NEUTRAL,
-      inputValidator: (value) => {
-        if (!value) return "You must provide a reason for rejection!";
-      },
-    });
-
-    if (!isConfirmed) return;
-    reason = text;
-  } else {
-    // 2. CONFIRM APPROVAL
-    const confirmResult = await Swal.fire({
-      title: `Confirm Approval?`,
-      text: `Are you sure you want to provide final approval for ${staffName}?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: CONFIG.COLORS.SUCCESS,
-      cancelButtonColor: CONFIG.COLORS.NEUTRAL,
-      confirmButtonText: "Yes, Approve",
-    });
-    if (!confirmResult.isConfirmed) return;
-  }
+  if (!confirmResult.isConfirmed) return;
 
   toggleLoading(decision, true);
 
@@ -193,28 +155,22 @@ async function processFinalDecision(token, decision, staffName) {
       body: JSON.stringify({
         token: token,
         status: decision,
-        reason: reason, // Sending reason field to match Go MDActionRequest struct
+        reason: "", // Sending empty string to satisfy the struct
       }),
     });
 
     const result = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok)
       throw new Error(result.error || CONFIG.MESSAGES.ACTION_FAILED);
-    }
 
-    await showSuccess(
-      "Workflow Finalized",
-      `The request for ${staffName} has been ${decision.toLowerCase()} and archived.`,
-    );
+    await showSuccess("Success", `Request has been ${decision.toLowerCase()}.`);
     window.location.reload();
   } catch (error) {
-    console.error("MD Action Error:", error);
-    showError(error.message || CONFIG.MESSAGES.ACTION_FAILED);
+    showError(error.message);
     toggleLoading(decision, false);
   }
 }
-
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
