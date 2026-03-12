@@ -1,21 +1,16 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Character encoding - must be first -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MD Final Verdict | PetroData Leave Portal</title>
 
-    <!-- Title should be descriptive -->
-    <title>Final Approval | PetroData Leave Portal</title>
-
-    <!-- Meta tags for optimization -->
     <meta
       name="description"
       content="Managing Director final approval for leave requests"
     />
     <meta name="theme-color" content="#004d40" />
 
-    <!-- External stylesheets (order: Fonts → Icons → Styles) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
@@ -29,14 +24,12 @@
   </head>
 
   <body>
-    <!-- Main content wrapper -->
     <div class="background-overlay" role="presentation"></div>
 
     <main class="auth-container">
       <article class="auth-card approval-card">
-        <div class="accent-bar md-accent" aria-hidden="true"></div>
+        <div class="accent-bar" aria-hidden="true"></div>
 
-        <!-- Header section -->
         <header class="logo-section">
           <img
             src="assets/newlogo.png"
@@ -45,180 +38,113 @@
             width="100"
             height="100"
           />
-          <h1>Managing Director Review</h1>
+          <h1>MD Final Verdict</h1>
           <p id="sub-header">
-            Final Verdict for
+            Final review for
             <span id="displayStaffName" class="staff-name-highlight">...</span>
           </p>
         </header>
 
-        <!-- Form content -->
         <form class="stylish-form" aria-label="MD final approval form">
-          <!-- Staff Information Section -->
           <section class="form-section">
             <h2>Staff Information</h2>
-
             <div class="info-group">
               <div class="display-wrapper">
-                <label for="displayStaffNo">
-                  <i class="fas fa-id-badge" aria-hidden="true"></i>
-                  Staff No
-                </label>
-                <div class="data-field" id="displayStaffNo" role="status">
-                  Loading...
-                </div>
+                <label><i class="fas fa-id-badge"></i> Staff No</label>
+                <div class="data-field" id="displayStaffNo">Loading...</div>
               </div>
-
               <div class="display-wrapper">
-                <label for="displayDesignation">
-                  <i class="fas fa-briefcase" aria-hidden="true"></i>
-                  Designation
-                </label>
-                <div class="data-field" id="displayDesignation" role="status">
-                  Loading...
-                </div>
+                <label><i class="fas fa-briefcase"></i> Designation</label>
+                <div class="data-field" id="displayDesignation">Loading...</div>
               </div>
             </div>
           </section>
 
-          <!-- Leave Details Section -->
           <section class="form-section">
             <h2>Leave Details</h2>
-
             <div class="info-group">
               <div class="display-wrapper">
-                <label for="displayType">
-                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                  Leave Type
-                </label>
-                <div class="data-field" id="displayType" role="status">
-                  Loading...
-                </div>
+                <label><i class="fas fa-calendar-alt"></i> Leave Type</label>
+                <div class="data-field" id="displayType">Loading...</div>
               </div>
-
               <div class="display-wrapper">
-                <label for="displayTotalDays">
-                  <i class="fas fa-clock" aria-hidden="true"></i>
-                  Duration
-                </label>
-                <div class="data-field" id="displayTotalDays" role="status">
-                  Loading...
-                </div>
+                <label><i class="fas fa-clock"></i> Duration</label>
+                <div class="data-field" id="displayTotalDays">Loading...</div>
               </div>
             </div>
-
             <div class="display-wrapper full-width">
-              <label for="dateRange">
-                <i class="fas fa-calendar-day" aria-hidden="true"></i>
-                Requested Dates
-              </label>
-              <div class="data-field" id="dateRange" role="status">
+              <label><i class="fas fa-calendar-day"></i> Proposed Dates</label>
+              <div class="data-field" id="dateRange">
                 <span id="displayStart">...</span>
-                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <i class="fas fa-arrow-right"></i>
                 <span id="displayEnd">...</span>
               </div>
             </div>
           </section>
 
-          <!-- Audit Trail Section -->
           <section class="form-section audit-trail-section">
             <h2>Review History</h2>
-
             <div class="info-group audit-group">
               <div class="display-wrapper">
-                <label for="displayManagerDecision">
-                  <i class="fas fa-user-check" aria-hidden="true"></i>
-                  Line Manager Decision
-                </label>
+                <label
+                  ><i class="fas fa-user-check"></i> Line Manager Review</label
+                >
                 <div
                   class="data-field decision-field"
                   id="displayManagerDecision"
-                  role="status"
-                  aria-live="polite"
                 >
                   ...
                 </div>
               </div>
-
               <div class="display-wrapper">
-                <label for="displayHRDecision">
-                  <i class="fas fa-user-tie" aria-hidden="true"></i>
-                  Human Resources Decision
-                </label>
-                <div
-                  class="data-field decision-field"
-                  id="displayHRDecision"
-                  role="status"
-                  aria-live="polite"
-                >
+                <label><i class="fas fa-user-tie"></i> HR Recommendation</label>
+                <div class="data-field decision-field" id="displayHRDecision">
                   ...
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Workflow Status -->
-          <div class="display-wrapper full-width">
-            <label for="currentStatus">
-              <i class="fas fa-info-circle" aria-hidden="true"></i>
-              Workflow Status
-            </label>
-            <div
-              class="data-field md-status"
-              id="currentStatus"
-              role="status"
-              aria-live="polite"
-            >
-              ...
-            </div>
-          </div>
-
-          <!-- Status Message -->
           <aside
             id="statusMessage"
             class="status-banner hidden"
             role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
           ></aside>
 
-          <!-- Action Buttons -->
-          <div
-            id="actionButtons"
-            class="approval-actions"
-            role="group"
-            aria-label="Final approval actions"
-          >
+          <div id="actionButtons" class="approval-actions">
             <button
               id="approveBtn"
               type="button"
               class="btn-action btn-approve"
-              aria-label="Final approval of leave request"
             >
-              Final Approval
-              <i class="fas fa-check-double" aria-hidden="true"></i>
+              <span class="btn-text">Final Approval</span>
+              <i class="fas fa-check-double" id="approveIcon"></i>
+              <i
+                class="fas fa-spinner fa-spin"
+                id="approveSpinner"
+                style="display: none"
+              ></i>
             </button>
 
-            <button
-              id="rejectBtn"
-              type="button"
-              class="btn-action btn-reject"
-              aria-label="Final rejection of leave request"
-            >
-              Final Rejection
-              <i class="fas fa-times-circle" aria-hidden="true"></i>
+            <button id="rejectBtn" type="button" class="btn-action btn-reject">
+              <span class="btn-text">Final Rejection</span>
+              <i class="fas fa-times-circle" id="rejectIcon"></i>
+              <i
+                class="fas fa-spinner fa-spin"
+                id="rejectSpinner"
+                style="display: none"
+              ></i>
             </button>
           </div>
         </form>
 
-        <!-- Footer -->
         <footer class="auth-footer">
-          <p>&copy; 2026 PetroData Management System. All rights reserved.</p>
+          <p>&copy; 2026 PetroData Management System.</p>
         </footer>
       </article>
     </main>
 
-    <!-- Scripts (external after content) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/approve_md.js" defer></script>
   </body>
 </html>
