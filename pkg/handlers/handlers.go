@@ -586,6 +586,7 @@ func HandleLineManagerAction(w http.ResponseWriter, r *http.Request) {
 		hrTokenStr := uuid.New().String()
 		leaveReq.HRToken = &hrTokenStr
 
+		log.Printf("[DEBUG] Saving HR Token for %s: %s", leaveReq.StaffName, *leaveReq.HRToken)
 		// Save before sending email
 		if err := database.DB.Save(&leaveReq).Error; err != nil {
 			log.Printf("[ERROR] Failed to save manager approval: %v", err)

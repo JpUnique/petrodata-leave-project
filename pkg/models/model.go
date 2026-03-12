@@ -45,10 +45,10 @@ type LeaveRequest struct {
 	MDApproved      bool `gorm:"default:false" json:"md_approved"`
 
 	// Security Tokens for the Links
-	RequestToken *string `gorm:"uniqueIndex" json:"request_token"` // Manager's link
-	HRToken      *string `json:"hr_token"`                         // HR's link
-	MDToken      *string `json:"md_token"`                         // MD's link (Added)
-	FinalHRToken *string `json:"final_hr_token"`                   // Added for the Archive/PDF page
+	RequestToken *string `gorm:"uniqueIndex" json:"request_token"`            // Manager's link
+	HRToken      *string `gorm:"column:hr_token" json:"hr_token"`             // HR's link
+	MDToken      *string `gorm:"column:md_token" json:"md_token"`             // MD's link (Added)
+	FinalHRToken *string `gorm:"column:final_hr_token" json:"final_hr_token"` // Added for the Archive/PDF page
 
 	CreatedAt time.Time `json:"created_at"`
 }
