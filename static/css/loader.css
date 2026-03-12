@@ -1,0 +1,36 @@
+/* loader.css - PetroData Portal Loading States */
+
+.btn-inline-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 180px; /* Ensures button width stays consistent */
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* State when button is processing */
+.btn-inline-send:disabled {
+    background-color: #80cbc4 !important; /* Soft teal to show inactive state */
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Spinner Styling */
+#btnSpinner {
+    font-size: 1rem;
+    color: #ffffff;
+}
+
+/* Text pulse animation for feedback */
+.loading-text {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}

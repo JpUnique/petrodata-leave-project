@@ -40,6 +40,8 @@ func Connect() {
 
 // migrateWithIndexes handles AutoMigrate + partial unique indexes for nullable tokens
 func migrateWithIndexes(db *gorm.DB) error {
+	log.Println("!!! Wiping database for testing !!!")
+	db.Exec("TRUNCATE TABLE users, leave_requests, approval_actions RESTART IDENTITY CASCADE")
 	// Drop old problematic indexes (fix existing duplicate key errors)
 	indexesToDrop := []string{
 		"idx_leave_requests_hr_token",

@@ -1,6 +1,6 @@
 /**
  * form-handler.js - PetroData Leave Portal
- * Aligned with Go Backend Struct: StaffName, StaffNo, etc.
+ * Aligned with Go Backend Struct & UI Spinner Initiative
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,36 +8,52 @@ document.addEventListener("DOMContentLoaded", () => {
   const startDateInput = document.getElementById("startDate");
   const resumptionDateInput = document.getElementById("resumptionDate");
   const totalDaysInput = document.getElementById("totalDays");
-  const staffName = localStorage.getItem(CONFIG.STORAGE.USER_NAME);
-  const staffNo = localStorage.getItem(CONFIG.STORAGE.STAFF_NO);
+  const nameInput = document.getElementById("staffName");
+  const noInput = document.getElementById("staffNo");
 
-  document.getElementById("displayStaffName").textContent = staffName || "User";
-  document.getElementById("displayStaffNo").textContent = staffNo || "N/A";
+  // Spinner Elements
+  const submitBtn = document.getElementById("sendRequestBtn");
+  const btnText = document.getElementById("btnText");
+  const btnIcon = document.getElementById("btnIcon");
+  const btnSpinner = document.getElementById("btnSpinner");
 
-  // --- 1. Real-time Calculation Trigger ---
+  // 1. Auto-fill from LocalStorage (Using keys defined in config.js)
+  const savedName = localStorage.getItem(CONFIG.STORAGE.USER_NAME);
+  const savedStaffNo = localStorage.getItem(CONFIG.STORAGE.STAFF_NO);
+
+  if (nameInput) {
+    nameInput.value = savedName || "";
+    nameInput.readOnly = true; // Make it read-only for security
+  }
+  if (noInput) {
+    noInput.value = savedStaffNo || "";
+    noInput.readOnly = true; // Make it read-only for security
+  }
+
+  // 2. Real-time Calculation Trigger
   const handleDateChange = () => {
     const startVal = startDateInput.value;
     const resumptionVal = resumptionDateInput.value;
 
     if (startVal && resumptionVal) {
-      // Uses utility.js to calculate working days (excluding weekends & resumption day)
+      // Uses utility.js to calculate working days
       const days = Utils.calculateLeaveDays(startVal, resumptionVal);
       totalDaysInput.value = Utils.formatDaysText(days);
 
-      // Visual feedback: highlights the field when a value exists
+      // Visual feedback
       totalDaysInput.classList.toggle("has-value", days > 0);
     }
   };
 
+  // Using 'input' listener for immediate feedback across all browsers
   [startDateInput, resumptionDateInput].forEach((input) => {
-    input.addEventListener("change", handleDateChange);
+    input.addEventListener("input", handleDateChange);
   });
 
-  // --- 2. Form Submission ---
+  // 3. Form Submission
   leaveForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Check authentication first
     const token = localStorage.getItem(CONFIG.STORAGE.AUTH_TOKEN);
     if (!token) {
       Swal.fire({
@@ -51,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Recalculate pure integer for the backend
     const numericDays = Utils.calculateLeaveDays(
       startDateInput.value,
       resumptionDateInput.value,
@@ -66,8 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // --- PAYLOAD: Only send fields backend needs from form ---
-    // Backend gets staff_name, staff_email, staff_no from JWT token
+    // Prepare Payload
     const payload = {
       designation: document.getElementById("designation").value,
       department: document.getElementById("department").value,
@@ -78,19 +92,22 @@ document.addEventListener("DOMContentLoaded", () => {
       relief_staff: document.getElementById("reliefStaff").value,
       contact_address: document.getElementById("contactAddress").value,
       manager_email: document.getElementById("managerEmail").value,
-      // REMOVED: staff_name, staff_email, staff_no (backend gets from JWT)
     };
 
-    console.log("Sending Payload to Backend:", payload);
+    // --- START LOADING STATE ---
+    submitBtn.disabled = true;
+    if (btnText) btnText.textContent = "Processing...";
+    if (btnIcon) btnIcon.style.display = "none";
+    if (btnSpinner) btnSpinner.style.display = "inline-block";
 
     try {
       const response = await fetch(
-        "https://petrodata-portal.onrender.com/api/leave/submit", // Fixed: removed space
+        "https://petrodata-portal.onrender.com/api/leave/submit",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // ← ADD THIS
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         },
@@ -107,18 +124,13 @@ document.addEventListener("DOMContentLoaded", () => {
           leaveForm.reset();
           totalDaysInput.value = "";
           totalDaysInput.classList.remove("has-value");
+          // Re-fill non-form staff details after reset
+          if (nameInput) nameInput.value = savedName || "";
+          if (noInput) noInput.value = savedStaffNo || "";
         });
       } else if (response.status === 401) {
-        // Token expired or invalid
-        Swal.fire({
-          title: "Session Expired",
-          text: "Your session has expired. Please login again.",
-          icon: "warning",
-          confirmButtonColor: "#004d40",
-        }).then(() => {
-          localStorage.removeItem(CONFIG.STORAGE.AUTH_TOKEN);
-          window.location.href = "login.html";
-        });
+        localStorage.removeItem(CONFIG.STORAGE.AUTH_TOKEN);
+        window.location.href = "login.html";
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Server error");
@@ -126,6 +138,12 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Submission Error:", error);
       Swal.fire("Error", error.message || "Submission failed.", "error");
+    } finally {
+      // --- RESET LOADING STATE ---
+      submitBtn.disabled = false;
+      if (btnText) btnText.textContent = "Send Request";
+      if (btnIcon) btnIcon.style.display = "inline-block";
+      if (btnSpinner) btnSpinner.style.display = "none";
     }
   });
 });
