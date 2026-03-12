@@ -1,11 +1,3 @@
-/**
- * approve_hr.js - HR Leave Approval Handler
- * Refined to include loading spinners and unified MD email validation
- */
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
 const CONFIG = {
   API: {
     FETCH_DETAILS: "/api/leave/hr-details",
@@ -25,7 +17,8 @@ const CONFIG = {
   MESSAGES: {
     INVALID_TOKEN: "Invalid access link. No security token provided.",
     FETCH_ERROR: "Leave request not found or the HR link has expired.",
-    MD_EMAIL_REQUIRED: "Please provide a valid Managing Director email.",
+    MD_EMAIL_REQUIRED:
+      "Please provide the Managing Director's email to forward this approval.",
     MD_EMAIL_INVALID: "Please enter a valid @petrodata.net email address.",
     ACTION_FAILED: "Failed to process action on the server.",
     SYSTEM_ERROR: "System configuration error.",
@@ -70,7 +63,6 @@ function showWarning(title, message) {
 }
 
 function isValidEmail(email) {
-  // Enhanced to ensure it belongs to the organization domain
   return email && email.includes("@") && email.endsWith("@petrodata.net");
 }
 
@@ -99,6 +91,8 @@ function populateUI(data) {
     displayType: "leave_type",
     displayStart: "start_date",
     displayEnd: "resumption_date",
+    displayRelief: "relief_staff",
+    displayAddress: "contact_address",
   };
 
   Object.entries(fieldMapping).forEach(([id, key]) => {
@@ -118,24 +112,30 @@ function populateUI(data) {
 function displayManagerDecision(data) {
   const field = getElement("displayManagerDecision");
   if (!field) return;
+  // Use 'Approved' check to color the manager's status correctly
   const decision = data.manager_decision || "No decision recorded";
   field.textContent = decision;
-  field.style.color = getDecisionColor(decision);
+  field.style.color =
+    decision === "Approved" ? CONFIG.COLORS.SUCCESS : CONFIG.COLORS.ERROR;
 }
 
 function handleProcessedRequests(data) {
-  if (data.status === CONFIG.STATUS.PENDING_HR_REVIEW) return;
+  // If request is no longer in HR review, hide actions
+  if (
+    data.status !== CONFIG.STATUS.PENDING_HR_REVIEW &&
+    data.status !== "Pending Resource Review"
+  ) {
+    const actions = getElement("actionButtons");
+    if (actions) actions.style.display = "none";
 
-  const actions = getElement("actionButtons");
-  if (actions) actions.style.display = "none";
+    const forwarding = getElement("mdEmailContainer");
+    if (forwarding) forwarding.style.display = "none";
 
-  const forwarding = getElement("mdEmailContainer");
-  if (forwarding) forwarding.style.display = "none";
-
-  const banner = getElement("statusMessage");
-  if (banner) {
-    banner.classList.remove("hidden");
-    banner.innerHTML = `<i class="fas fa-info-circle"></i> This request has been processed as <strong>${data.hr_decision || "Unknown"}</strong>.`;
+    const banner = getElement("statusMessage");
+    if (banner) {
+      banner.classList.remove("hidden");
+      banner.innerHTML = `<i class="fas fa-info-circle"></i> This request has already been processed as <strong>${data.resource_decision || data.status}</strong>.`;
+    }
   }
 }
 
@@ -143,25 +143,6 @@ function handleProcessedRequests(data) {
 // ACTION HANDLERS
 // ============================================================================
 
-function setupActionButtons(token, staffName) {
-  const approveBtn = getElement("approveBtn");
-  const rejectBtn = getElement("rejectBtn");
-
-  if (approveBtn) {
-    approveBtn.addEventListener("click", () =>
-      processDecision(token, CONFIG.STATUS.APPROVED, staffName),
-    );
-  }
-  if (rejectBtn) {
-    rejectBtn.addEventListener("click", () =>
-      processDecision(token, CONFIG.STATUS.REJECTED, staffName),
-    );
-  }
-}
-
-/**
- * Handles button UI states (Spinners)
- */
 function toggleLoading(decision, isLoading) {
   const isApprove = decision === CONFIG.STATUS.APPROVED;
   const btn = getElement(isApprove ? "approveBtn" : "rejectBtn");
@@ -183,23 +164,30 @@ function toggleLoading(decision, isLoading) {
 }
 
 async function processDecision(token, decision, staffName) {
+  const isApprove = decision === CONFIG.STATUS.APPROVED;
   const mdEmailInput = getElement("mdEmail");
-  if (!mdEmailInput) return;
+  let mdEmail = "";
 
-  const mdEmail = mdEmailInput.value.trim();
+  // Validation: MD Email is ONLY required for approval
+  if (isApprove) {
+    if (!mdEmailInput) return;
+    mdEmail = mdEmailInput.value.trim();
 
-  if (!mdEmail) {
-    showWarning("MD Email Required", CONFIG.MESSAGES.MD_EMAIL_REQUIRED);
-    return;
-  }
-  if (!isValidEmail(mdEmail)) {
-    showWarning("Invalid Email", CONFIG.MESSAGES.MD_EMAIL_INVALID);
-    return;
+    if (!mdEmail) {
+      showWarning("MD Email Required", CONFIG.MESSAGES.MD_EMAIL_REQUIRED);
+      return;
+    }
+    if (!isValidEmail(mdEmail)) {
+      showWarning("Invalid Email", CONFIG.MESSAGES.MD_EMAIL_INVALID);
+      return;
+    }
   }
 
   const confirmResult = await Swal.fire({
-    title: `Confirm HR ${decision}?`,
-    text: `The request for ${staffName} will be marked as ${decision.toLowerCase()} and forwarded to the MD.`,
+    title: `Confirm ${decision}?`,
+    text: isApprove
+      ? `Approving ${staffName}'s request and forwarding to the Managing Director.`
+      : `Rejecting ${staffName}'s request. This will terminate the workflow.`,
     icon: "question",
     showCancelButton: true,
     confirmButtonColor: getDecisionColor(decision),
@@ -209,32 +197,47 @@ async function processDecision(token, decision, staffName) {
 
   if (!confirmResult.isConfirmed) return;
 
-  // Start Spinner
   toggleLoading(decision, true);
 
   try {
     const response = await fetch(CONFIG.API.SUBMIT_ACTION, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, status: decision, md_email: mdEmail }),
+      body: JSON.stringify({
+        token: token,
+        status: decision,
+        director_email: mdEmail,
+      }),
     });
 
-    if (!response.ok) throw new Error(CONFIG.MESSAGES.ACTION_FAILED);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || CONFIG.MESSAGES.ACTION_FAILED);
+    }
 
     await showSuccess(
       "Decision Recorded",
-      `The audit trail has been forwarded to ${mdEmail}.`,
+      isApprove
+        ? `Request forwarded successfully to ${mdEmail}.`
+        : "The request has been rejected and the staff notified.",
     );
+
     window.location.reload();
   } catch (error) {
     showError(error.message);
-    toggleLoading(decision, false); // Stop Spinner on error
+    toggleLoading(decision, false);
   }
 }
 
-// Initial Load
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
 document.addEventListener("DOMContentLoaded", async () => {
-  const token = getUrlParameter("token");
+  // Sync with emailer.go link: ?resource_token=...
+  const token = getUrlParameter("resource_token");
+
   if (!token) {
     showError(CONFIG.MESSAGES.INVALID_TOKEN);
     return;
@@ -242,11 +245,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const response = await fetch(`${CONFIG.API.FETCH_DETAILS}?token=${token}`);
-    if (!response.ok) throw new Error(CONFIG.MESSAGES.FETCH_ERROR);
+
+    if (!response.ok) {
+      throw new Error(CONFIG.MESSAGES.FETCH_ERROR);
+    }
+
     const data = await response.json();
     populateUI(data);
-    setupActionButtons(token, data.staff_name);
+
+    // Setup Event Listeners
+    const approveBtn = getElement("approveBtn");
+    const rejectBtn = getElement("rejectBtn");
+
+    if (approveBtn) {
+      approveBtn.onclick = () =>
+        processDecision(token, CONFIG.STATUS.APPROVED, data.staff_name);
+    }
+    if (rejectBtn) {
+      rejectBtn.onclick = () =>
+        processDecision(token, CONFIG.STATUS.REJECTED, data.staff_name);
+    }
   } catch (error) {
-    showError(error.message);
+    console.error("Initialization Error:", error);
+    showError(error.message || CONFIG.MESSAGES.FETCH_ERROR);
   }
 });

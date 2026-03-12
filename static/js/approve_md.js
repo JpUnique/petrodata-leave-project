@@ -1,12 +1,3 @@
-/**
- * approve_md.js - Managing Director Leave Approval Handler
- * Handles fetching leave request details and processing final MD decisions
- * Finalizes the approval workflow and triggers archiving
- */
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
 const CONFIG = {
   API: {
     FETCH_DETAILS: "/api/leave/md-details",
@@ -22,7 +13,6 @@ const CONFIG = {
     ERROR: "#ff5252",
     NEUTRAL: "#888",
     PRIMARY: "#004d40",
-    WARNING: "#ff9800",
   },
   MESSAGES: {
     INVALID_TOKEN: "Invalid access link. No security token provided.",
@@ -38,9 +28,7 @@ const CONFIG = {
 
 function getElement(id) {
   const element = document.getElementById(id);
-  if (!element) {
-    console.warn(`Element with ID '${id}' not found`);
-  }
+  if (!element) console.warn(`Element with ID '${id}' not found`);
   return element;
 }
 
@@ -48,7 +36,7 @@ function showError(message) {
   Swal.fire({
     icon: "error",
     title: "Access Denied",
-    text: message || "An unexpected error occurred.",
+    text: message,
     confirmButtonColor: CONFIG.COLORS.PRIMARY,
   });
 }
@@ -62,24 +50,13 @@ function showSuccess(title, message) {
   });
 }
 
-function showWarning(title, message) {
-  return Swal.fire({
-    icon: "warning",
-    title,
-    text: message,
-    confirmButtonColor: CONFIG.COLORS.PRIMARY,
-  });
-}
-
 function getUrlParameter(param) {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(param);
+  return new URLSearchParams(window.location.search).get(param);
 }
 
 function getDecisionColor(decision) {
-  return decision === CONFIG.STATUS.APPROVED
-    ? CONFIG.COLORS.SUCCESS
-    : CONFIG.COLORS.ERROR;
+  // Handles "Approved" vs others
+  return decision === "Approved" ? CONFIG.COLORS.SUCCESS : CONFIG.COLORS.ERROR;
 }
 
 // ============================================================================
@@ -87,29 +64,28 @@ function getDecisionColor(decision) {
 // ============================================================================
 
 function populateUI(data) {
-  if (!data) {
-    console.error("No data provided to populateUI");
-    return;
-  }
+  if (!data) return;
 
   const fieldMapping = {
     displayStaffName: "staff_name",
     displayStaffNo: "staff_no",
+    displayDesignation: "designation",
+    displayDept: "department",
     displayType: "leave_type",
     displayStart: "start_date",
     displayEnd: "resumption_date",
+    displayRelief: "relief_staff",
+    displayAddress: "contact_address",
   };
 
-  Object.entries(fieldMapping).forEach(([elementId, dataKey]) => {
-    const element = getElement(elementId);
-    if (element) {
-      element.textContent = data[dataKey] || "N/A";
-    }
+  Object.entries(fieldMapping).forEach(([id, key]) => {
+    const el = getElement(id);
+    if (el) el.textContent = data[key] || "N/A";
   });
 
-  const totalDaysElement = getElement("displayTotalDays");
-  if (totalDaysElement) {
-    totalDaysElement.textContent = `${data.total_days || 0} Working Days`;
+  const totalDaysEl = getElement("displayTotalDays");
+  if (totalDaysEl) {
+    totalDaysEl.textContent = `${data.total_days || 0} Working Days`;
   }
 
   displayAuditTrail(data);
@@ -119,50 +95,41 @@ function populateUI(data) {
 function displayAuditTrail(data) {
   const managerField = getElement("displayManagerDecision");
   if (managerField) {
-    const managerDecision = data.manager_decision || "No Decision";
-    managerField.textContent = managerDecision;
-    managerField.style.color = getDecisionColor(managerDecision);
+    const decision = data.manager_decision || "Pending";
+    managerField.textContent = decision;
+    managerField.style.color = getDecisionColor(decision);
   }
 
   const hrField = getElement("displayHRDecision");
   if (hrField) {
-    const hrDecision = data.hr_decision || "No Decision";
-    hrField.textContent = hrDecision;
-    hrField.style.color = getDecisionColor(hrDecision);
+    const decision = data.resource_decision || "Pending";
+    hrField.textContent = decision;
+    hrField.style.color = getDecisionColor(decision);
   }
 }
 
 function handleFinalizedRequests(data) {
-  if (data.status === CONFIG.STATUS.PENDING_MD_REVIEW) {
-    return;
-  }
+  // If the status isn't pending MD review, the workflow is already over
+  if (data.status === CONFIG.STATUS.PENDING_MD_REVIEW) return;
 
-  const actionButtons = getElement("actionButtons");
-  if (actionButtons) {
-    actionButtons.style.display = "none";
-  }
+  const actions = getElement("actionButtons");
+  if (actions) actions.style.display = "none";
 
   const statusBanner = getElement("statusMessage");
   if (statusBanner) {
     statusBanner.classList.remove("hidden");
     statusBanner.innerHTML = `
       <i class="fas fa-check-double"></i>
-      This request has been finalized as
-      <strong>${data.status || "Unknown"}</strong>.
+      This request was finalized as <strong>${data.status}</strong>.
       The audit trail is now closed.
     `;
   }
 }
 
 // ============================================================================
-// UI STATE HELPERS
+// ACTION PROCESSING
 // ============================================================================
 
-/**
- * Toggles the loading state for the MD action buttons
- * @param {string} decision - 'Approved' or 'Rejected'
- * @param {boolean} isLoading - State
- */
 function toggleLoading(decision, isLoading) {
   const isApprove = decision === CONFIG.STATUS.APPROVED;
   const btn = getElement(isApprove ? "approveBtn" : "rejectBtn");
@@ -170,8 +137,8 @@ function toggleLoading(decision, isLoading) {
   const spinner = getElement(isApprove ? "approveSpinner" : "rejectSpinner");
 
   if (!btn) return;
-
   btn.disabled = isLoading;
+
   if (isLoading) {
     if (icon) icon.style.display = "none";
     if (spinner) spinner.style.display = "inline-block";
@@ -183,27 +150,50 @@ function toggleLoading(decision, isLoading) {
   }
 }
 
-// ============================================================================
-// EVENT LISTENERS
-// ============================================================================
+async function processFinalDecision(token, decision, staffName) {
+  const confirmResult = await Swal.fire({
+    title: `Final Decision: ${decision}`,
+    text: `Confirming ${decision.toLowerCase()} for ${staffName}. This will notify the staff and HR immediately.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: getDecisionColor(decision),
+    cancelButtonColor: CONFIG.COLORS.NEUTRAL,
+    confirmButtonText: "Confirm & Finalize",
+  });
 
-function setupActionButtons(token, staffName) {
-  const approveBtn = getElement("approveBtn");
-  const rejectBtn = getElement("rejectBtn");
+  if (!confirmResult.isConfirmed) return;
 
-  if (!approveBtn || !rejectBtn) return;
+  toggleLoading(decision, true);
 
-  approveBtn.addEventListener("click", () =>
-    processFinalDecision(token, CONFIG.STATUS.APPROVED, staffName),
-  );
+  try {
+    const response = await fetch(CONFIG.API.SUBMIT_ACTION, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, status: decision }),
+    });
 
-  rejectBtn.addEventListener("click", () =>
-    processFinalDecision(token, CONFIG.STATUS.REJECTED, staffName),
-  );
+    const result = await response.json();
+
+    if (!response.ok)
+      throw new Error(result.error || CONFIG.MESSAGES.ACTION_FAILED);
+
+    await showSuccess(
+      "Workflow Complete",
+      `Leave request has been ${decision.toLowerCase()}.`,
+    );
+    window.location.reload();
+  } catch (error) {
+    showError(error.message);
+    toggleLoading(decision, false);
+  }
 }
 
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
 document.addEventListener("DOMContentLoaded", async () => {
-  const token = getUrlParameter("token");
+  const token = getUrlParameter("director_token");
 
   if (!token) {
     showError(CONFIG.MESSAGES.INVALID_TOKEN);
@@ -216,58 +206,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const data = await response.json();
     populateUI(data);
-    setupActionButtons(token, data.staff_name);
+
+    // Bind Event Listeners
+    const approveBtn = getElement("approveBtn");
+    const rejectBtn = getElement("rejectBtn");
+
+    if (approveBtn) {
+      approveBtn.onclick = () =>
+        processFinalDecision(token, CONFIG.STATUS.APPROVED, data.staff_name);
+    }
+    if (rejectBtn) {
+      rejectBtn.onclick = () =>
+        processFinalDecision(token, CONFIG.STATUS.REJECTED, data.staff_name);
+    }
   } catch (error) {
-    showError(error.message || CONFIG.MESSAGES.FETCH_ERROR);
+    showError(error.message);
   }
 });
-
-// ============================================================================
-// FINAL DECISION PROCESSING
-// ============================================================================
-
-async function processFinalDecision(token, decision, staffName) {
-  if (!token || !decision || !staffName) {
-    showError(CONFIG.MESSAGES.SYSTEM_ERROR);
-    return;
-  }
-
-  const confirmResult = await Swal.fire({
-    title: `Final Decision: ${decision}`,
-    text: `You are about to ${decision.toLowerCase()} the leave request for ${staffName}. This action is final.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: getDecisionColor(decision),
-    cancelButtonColor: CONFIG.COLORS.NEUTRAL,
-    confirmButtonText: "Confirm & Finalize",
-  });
-
-  if (!confirmResult.isConfirmed) return;
-
-  // Start Spinner
-  toggleLoading(decision, true);
-
-  try {
-    const payload = { token, status: decision };
-
-    const response = await fetch(CONFIG.API.SUBMIT_ACTION, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) throw new Error(CONFIG.MESSAGES.ACTION_FAILED);
-
-    await showSuccess(
-      "Workflow Finalized",
-      `Request for ${staffName} has been ${decision.toLowerCase()}. Notification emails have been dispatched.`,
-    );
-
-    window.location.reload();
-  } catch (error) {
-    console.error("MD Action Error:", error);
-    showError(error.message || CONFIG.MESSAGES.ACTION_FAILED);
-    // Reset Spinner on Error
-    toggleLoading(decision, false);
-  }
-}

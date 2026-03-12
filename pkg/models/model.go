@@ -28,27 +28,27 @@ type LeaveRequest struct {
 
 	// Workflow Emails
 	ManagerEmail string `json:"manager_email"`
-	HREmail      string `json:"hr_email"` // Added: To store who the manager forwarded to
-	MDEmail      string `json:"md_email"` // Added: To store who HR forwarded to
+	HREmail      string `json:"resource_email"` // Added: To store who the manager forwarded to
+	MDEmail      string `json:"director_email"` // Added: To store who HR forwarded to
 
 	// Status & Logic
 	Status string `gorm:"default:'Pending'" json:"status"`
 
 	// Specific Decisions (To show in UI)
 	ManagerDecision string `json:"manager_decision"` // Will store "Approved" or "Rejected"
-	HRDecision      string `json:"hr_decision"`      // Will store "Approved" or "Rejected"
-	MDDecision      string `json:"md_decision"`      // Store MD's "Approved" or "Rejected"
+	HRDecision      string `json:"resource_decision"`      // Will store "Approved" or "Rejected"
+	MDDecision      string `json:"director_decision"`      // Store MD's "Approved" or "Rejected"
 
 	// Booleans for quick checks
 	ManagerApproved bool `gorm:"default:false" json:"manager_approved"`
-	HRApproved      bool `gorm:"default:false" json:"hr_approved"`
-	MDApproved      bool `gorm:"default:false" json:"md_approved"`
+	HRApproved      bool `gorm:"default:false" json:"resource_approved"`
+	MDApproved      bool `gorm:"default:false" json:"director_approved"`
 
 	// Security Tokens for the Links
 	RequestToken *string `gorm:"uniqueIndex" json:"request_token"`            // Manager's link
-	HRToken      *string `gorm:"column:hr_token" json:"hr_token"`             // HR's link
-	MDToken      *string `gorm:"column:md_token" json:"md_token"`             // MD's link (Added)
-	FinalHRToken *string `gorm:"column:final_hr_token" json:"final_hr_token"` // Added for the Archive/PDF page
+	HRToken      *string `gorm:"column:resource_token" json:"resource_token"`             // HR's link
+	MDToken      *string `gorm:"column:director_token" json:"director_token"`             // MD's link (Added)
+	FinalHRToken *string `gorm:"column:final_token" json:"final_token"` // Added for the Archive/PDF page
 
 	CreatedAt time.Time `json:"created_at"`
 }

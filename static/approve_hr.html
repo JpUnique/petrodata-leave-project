@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HR Review | PetroData Leave Portal</title>
-
     <meta
       name="description"
       content="HR leave request review and approval system"
@@ -12,7 +11,7 @@
     <meta name="theme-color" content="#004d40" />
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
     <link
@@ -26,7 +25,7 @@
   </head>
 
   <body>
-    <div class="background-overlay" role="presentation"></div>
+    <div class="background-overlay" aria-hidden="true"></div>
 
     <main class="auth-container">
       <article class="auth-card approval-card">
@@ -37,23 +36,18 @@
             src="assets/newlogo.png"
             alt="PetroData Logo"
             class="main-logo"
-            width="100"
-            height="100"
+            width="150"
+            height="150"
           />
           <h1>HR Leave Review</h1>
           <p id="sub-header">
-            Reviewing request for
-            <span id="displayStaffName" class="staff-name-highlight">...</span>
+            Reviewing request for <span id="displayStaffName">...</span>
           </p>
         </header>
 
-        <form
-          id="hrReviewForm"
-          class="stylish-form"
-          aria-label="Leave review form"
-        >
-          <section class="form-section">
-            <h2>Staff Information</h2>
+        <form class="stylish-form" aria-label="HR leave review form">
+          <fieldset>
+            <legend class="sr-only">Staff Information</legend>
             <div class="info-group">
               <div class="display-wrapper">
                 <label><i class="fas fa-id-badge"></i> Staff No</label>
@@ -64,10 +58,14 @@
                 <div class="data-field" id="displayDesignation">Loading...</div>
               </div>
             </div>
-          </section>
+            <div class="display-wrapper full-width">
+              <label><i class="fas fa-building"></i> Department</label>
+              <div class="data-field" id="displayDept">Loading...</div>
+            </div>
+          </fieldset>
 
-          <section class="form-section">
-            <h2>Leave Details</h2>
+          <fieldset>
+            <legend class="sr-only">Leave Details</legend>
             <div class="info-group">
               <div class="display-wrapper">
                 <label><i class="fas fa-calendar-alt"></i> Leave Type</label>
@@ -78,80 +76,100 @@
                 <div class="data-field" id="displayTotalDays">Loading...</div>
               </div>
             </div>
-          </section>
+            <div class="display-wrapper full-width">
+              <label><i class="fas fa-calendar-day"></i> Approval Dates</label>
+              <div class="data-field">
+                <span id="displayStart">...</span>
+                <i
+                  class="fas fa-arrow-right"
+                  style="font-size: 0.8rem; margin: 0 10px; color: #888"
+                ></i>
+                <span id="displayEnd">...</span>
+              </div>
+            </div>
+          </fieldset>
 
-          <section class="form-section audit-section">
-            <h2>Approval Chain</h2>
-            <div class="display-wrapper full-width audit-highlight">
-              <label
-                ><i class="fas fa-user-check"></i> Line Manager Decision</label
-              >
+          <fieldset>
+            <legend class="sr-only">Approval Chain</legend>
+            <div
+              class="display-wrapper full-width"
+              style="border-left: 4px solid #004d40; background: #f9fdfc"
+            >
+              <label style="color: #004d40; font-weight: 600">
+                <i class="fas fa-user-check"></i> Line Manager Decision
+              </label>
               <div
-                class="data-field decision-field"
+                class="data-field"
                 id="displayManagerDecision"
+                style="font-style: italic"
               >
                 Loading...
               </div>
             </div>
-          </section>
+          </fieldset>
 
-          <section class="forwarding-box">
-            <div class="workflow-content">
-              <h3><i class="fas fa-paper-plane"></i> Forward to MD</h3>
+          <fieldset>
+            <legend class="sr-only">Forwarding</legend>
 
-              <div class="input-group">
-                <label for="mdEmail">Managing Director Email</label>
-                <div class="email-input-wrapper">
-                  <i class="fas fa-user-check" aria-hidden="true"></i>
-                  <input
-                    type="email"
-                    id="mdEmail"
-                    placeholder="md@petrodata.net"
-                    required
-                  />
-                </div>
-                <small class="field-hint"
-                  >Enter the MD's official email address</small
-                >
+            <div
+              id="statusMessage"
+              class="status-banner hidden"
+              role="status"
+            ></div>
+
+            <div class="display-wrapper full-width" id="mdEmailContainer">
+              <label for="mdEmail"
+                ><i class="fas fa-paper-plane"></i> Forward to MD (Email)</label
+              >
+              <div class="email-input-wrapper">
+                <i class="fas fa-user-shield"></i>
+                <input
+                  type="email"
+                  id="mdEmail"
+                  placeholder="md@petrodata.net"
+                  required
+                />
               </div>
             </div>
-          </section>
 
-          <div class="approval-actions">
-            <button
-              id="approveBtn"
-              type="button"
-              class="btn-action btn-approve"
-            >
-              <span class="btn-text">Approve</span>
-              <i class="fas fa-check-circle" id="approveIcon"></i>
-              <i
-                class="fas fa-spinner fa-spin"
-                id="approveSpinner"
-                style="display: none"
-              ></i>
-            </button>
-
-            <button id="rejectBtn" type="button" class="btn-action btn-reject">
-              <span class="btn-text">Reject</span>
-              <i class="fas fa-times-circle" id="rejectIcon"></i>
-              <i
-                class="fas fa-spinner fa-spin"
-                id="rejectSpinner"
-                style="display: none"
-              ></i>
-            </button>
-          </div>
+            <div id="actionButtons" class="approval-actions">
+              <button
+                id="approveBtn"
+                type="button"
+                class="btn-action btn-approve"
+              >
+                Approve
+                <i class="fas fa-check-circle" id="approveIcon"></i>
+                <i
+                  class="fas fa-spinner fa-spin"
+                  id="approveSpinner"
+                  style="display: none"
+                ></i>
+              </button>
+              <button
+                id="rejectBtn"
+                type="button"
+                class="btn-action btn-reject"
+              >
+                Reject
+                <i class="fas fa-times-circle" id="rejectIcon"></i>
+                <i
+                  class="fas fa-spinner fa-spin"
+                  id="rejectSpinner"
+                  style="display: none"
+                ></i>
+              </button>
+            </div>
+          </fieldset>
         </form>
 
         <footer class="auth-footer">
-          <p>&copy; 2026 PetroData Management System.</p>
+          <p>PetroData Management System &copy; 2026</p>
         </footer>
       </article>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="js/auth.js"></script>
     <script src="js/approve_hr.js" defer></script>
   </body>
 </html>

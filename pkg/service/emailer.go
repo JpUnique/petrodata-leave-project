@@ -147,7 +147,7 @@ func SendToHR(email, staffName, token string) error {
 		baseURL = "https://petrodata-portal.onrender.com"
 	}
 
-	link := fmt.Sprintf("%s/approve_hr.html?token=%s", baseURL, token)
+	link := fmt.Sprintf("%s/approve_hr.html?resource_token=%s", baseURL, token)
 
 	html := fmt.Sprintf(`
 		<div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
@@ -170,7 +170,7 @@ func SendToMD(email, staffName, token string) error {
 		baseURL = "https://petrodata-portal.onrender.com"
 	}
 
-	link := fmt.Sprintf("%s/approve_md.html?token=%s", baseURL, token)
+	link := fmt.Sprintf("%s/approve_md.html?director_token=%s", baseURL, token)
 
 	html := fmt.Sprintf(`
 		<div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
@@ -193,7 +193,7 @@ func SendFinalArchiveToHR(email, staffName, token string) error {
 		baseURL = "https://petrodata-portal.onrender.com"
 	}
 
-	link := fmt.Sprintf("%s/final_archive.html?token=%s", baseURL, token)
+	link := fmt.Sprintf("%s/final_archive.html?final_token=%s", baseURL, token)
 
 	html := fmt.Sprintf(`
 		<div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">

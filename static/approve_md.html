@@ -45,44 +45,120 @@
           </p>
         </header>
 
-        <form class="stylish-form" aria-label="MD final approval form">
-          <section class="form-section">
-            <h2>Staff Information</h2>
-            <div class="info-group">
-              <div class="display-wrapper">
-                <label><i class="fas fa-id-badge"></i> Staff No</label>
-                <div class="data-field" id="displayStaffNo">Loading...</div>
-              </div>
-              <div class="display-wrapper">
-                <label><i class="fas fa-briefcase"></i> Designation</label>
-                <div class="data-field" id="displayDesignation">Loading...</div>
-              </div>
-            </div>
-          </section>
+        <!-- Approval form -->
+        <form class="stylish-form" aria-label="Leave approval form">
+          <!-- Staff information section -->
+          <fieldset>
+            <legend class="sr-only">Staff Information</legend>
 
-          <section class="form-section">
-            <h2>Leave Details</h2>
+            <!-- Staff details grid -->
             <div class="info-group">
               <div class="display-wrapper">
-                <label><i class="fas fa-calendar-alt"></i> Leave Type</label>
-                <div class="data-field" id="displayType">Loading...</div>
+                <label for="displayStaffNo">
+                  <i class="fas fa-id-badge" aria-hidden="true"></i>
+                  Staff No
+                </label>
+                <div class="data-field" id="displayStaffNo" aria-live="polite">
+                  Loading...
+                </div>
               </div>
               <div class="display-wrapper">
-                <label><i class="fas fa-clock"></i> Duration</label>
-                <div class="data-field" id="displayTotalDays">Loading...</div>
+                <label for="displayDesignation">
+                  <i class="fas fa-briefcase" aria-hidden="true"></i>
+                  Designation
+                </label>
+                <div
+                  class="data-field"
+                  id="displayDesignation"
+                  aria-live="polite"
+                >
+                  Loading...
+                </div>
               </div>
             </div>
+
+            <!-- Department -->
             <div class="display-wrapper full-width">
-              <label><i class="fas fa-calendar-day"></i> Proposed Dates</label>
-              <div class="data-field" id="dateRange">
+              <label for="displayDept">
+                <i class="fas fa-building" aria-hidden="true"></i>
+                Department
+              </label>
+              <div class="data-field" id="displayDept" aria-live="polite">
+                Loading...
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- Leave details section -->
+          <fieldset>
+            <legend class="sr-only">Leave Details</legend>
+
+            <!-- Leave type and duration -->
+            <div class="info-group">
+              <div class="display-wrapper">
+                <label for="displayType">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  Leave Type
+                </label>
+                <div class="data-field" id="displayType" aria-live="polite">
+                  Loading...
+                </div>
+              </div>
+              <div class="display-wrapper">
+                <label for="displayTotalDays">
+                  <i class="fas fa-clock" aria-hidden="true"></i>
+                  Duration
+                </label>
+                <div
+                  class="data-field"
+                  id="displayTotalDays"
+                  aria-live="polite"
+                >
+                  Loading...
+                </div>
+              </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="display-wrapper full-width">
+              <label>
+                <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                Approval Dates
+              </label>
+              <div class="data-field" aria-live="polite">
                 <span id="displayStart">...</span>
-                <i class="fas fa-arrow-right"></i>
+                <i
+                  class="fas fa-arrow-right"
+                  aria-hidden="true"
+                  style="font-size: 0.8rem; margin: 0 10px; color: #888"
+                ></i>
                 <span id="displayEnd">...</span>
               </div>
             </div>
-          </section>
 
-          <section class="form-section audit-trail-section">
+            <!-- Relief staff -->
+            <div class="display-wrapper full-width">
+              <label for="displayRelief">
+                <i class="fas fa-user-shield" aria-hidden="true"></i>
+                Relief Staff
+              </label>
+              <div class="data-field" id="displayRelief" aria-live="polite">
+                Loading...
+              </div>
+            </div>
+
+            <!-- Contact address -->
+            <div class="display-wrapper full-width">
+              <label for="displayAddress">
+                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                Contact Address
+              </label>
+              <div class="data-field" id="displayAddress" aria-live="polite">
+                Loading...
+              </div>
+            </div>
+          </fieldset>
+          <section class="form-section audit-section">
             <h2>Review History</h2>
             <div class="info-group audit-group">
               <div class="display-wrapper">

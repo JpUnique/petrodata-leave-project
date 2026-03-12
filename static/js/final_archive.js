@@ -1,11 +1,3 @@
-/**
- * final_archive.js - Leave Request Archive Handler
- * Handles displaying finalized leave requests and generating PDF archives
- */
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
 const CONFIG = {
   API: {
     FETCH_DETAILS: "/api/leave/final-details",
@@ -227,7 +219,7 @@ function displayDecisionAuditTrail(data) {
   // HR's Decision
   const hrField = getElement(CONFIG.DOM_IDS.HR_DECISION);
   if (hrField) {
-    const hrDecision = data.hr_decision || "N/A";
+    const hrDecision = data.resource_decision || "N/A";
     hrField.textContent = hrDecision;
     hrField.style.fontWeight = "bold";
     hrField.style.color = getDecisionColor(hrDecision);
@@ -236,7 +228,7 @@ function displayDecisionAuditTrail(data) {
   // MD's Final Decision
   const mdField = getElement(CONFIG.DOM_IDS.MD_DECISION);
   if (mdField) {
-    const mdDecision = data.md_decision || data.status || "N/A";
+    const mdDecision = data.director_decision || data.status || "N/A";
     mdField.textContent = mdDecision;
     mdField.style.fontWeight = "bold";
     mdField.style.color = getDecisionColor(mdDecision);
@@ -327,7 +319,7 @@ function setupPDFButton(staffName) {
  * Handle initial page load and data fetching
  */
 document.addEventListener("DOMContentLoaded", async () => {
-  const token = getUrlParameter("token");
+  const token = getUrlParameter("final_token");
 
   if (!token) {
     showError(CONFIG.MESSAGES.NO_TOKEN);

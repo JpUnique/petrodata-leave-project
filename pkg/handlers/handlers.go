@@ -41,7 +41,7 @@ type LoginRequest struct {
 type ManagerActionRequest struct {
 	Token   string `json:"token"`
 	Status  string `json:"status"` // "Approved" or "Rejected"
-	HREmail string `json:"hr_email"`
+	HREmail string `json:"resource_email"`
 	Reason  string `json:"reason,omitempty"` // Required if rejected
 }
 
@@ -49,7 +49,7 @@ type ManagerActionRequest struct {
 type HRActionRequest struct {
 	Token   string `json:"token"`
 	Status  string `json:"status"` // "Approved" or "Rejected"
-	MDEmail string `json:"md_email"`
+	MDEmail string `json:"director_email"`
 	Reason  string `json:"reason,omitempty"` // Required if rejected
 }
 
@@ -456,7 +456,7 @@ func GetLeaveRequestByHRToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var leaveReq models.LeaveRequest
-	if err := database.DB.Where("hr_token = ?", token).First(&leaveReq).Error; err != nil {
+	if err := database.DB.Where("resource_token = ?", token).First(&leaveReq).Error; err != nil {
 		log.Printf("[ERROR] Invalid HR token: %s", token)
 		respondError(w, http.StatusNotFound, ErrTokenNotFound)
 		return
@@ -483,7 +483,7 @@ func GetLeaveRequestByMDToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var leaveReq models.LeaveRequest
-	if err := database.DB.Where("md_token = ?", token).First(&leaveReq).Error; err != nil {
+	if err := database.DB.Where("director_token = ?", token).First(&leaveReq).Error; err != nil {
 		log.Printf("[ERROR] Invalid MD token: %s", token)
 		respondError(w, http.StatusNotFound, ErrTokenNotFound)
 		return
@@ -510,7 +510,7 @@ func GetFinalArchiveDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var leaveReq models.LeaveRequest
-	if err := database.DB.Where("final_hr_token = ?", token).First(&leaveReq).Error; err != nil {
+	if err := database.DB.Where("final_token = ?", token).First(&leaveReq).Error; err != nil {
 		log.Printf("[ERROR] Invalid final archive token: %s", token)
 		respondError(w, http.StatusNotFound, ErrTokenNotFound)
 		return
@@ -684,7 +684,7 @@ func HandleHRManagerAction(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve the leave request
 	var leaveReq models.LeaveRequest
-	if err := database.DB.Where("hr_token = ?", req.Token).First(&leaveReq).Error; err != nil {
+	if err := database.DB.Where("resource_token = ?", req.Token).First(&leaveReq).Error; err != nil {
 		log.Printf("[ERROR] Leave request not found for HR token: %s", req.Token)
 		respondError(w, http.StatusNotFound, ErrRequestNotFound)
 		return
@@ -790,7 +790,7 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve the leave request
 	var leaveReq models.LeaveRequest
-	if err := database.DB.Where("md_token = ?", req.Token).First(&leaveReq).Error; err != nil {
+	if err := database.DB.Where("director_token = ?", req.Token).First(&leaveReq).Error; err != nil {
 		log.Printf("[ERROR] Leave request not found for MD token: %s", req.Token)
 		respondError(w, http.StatusNotFound, ErrRequestNotFound)
 		return

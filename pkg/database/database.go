@@ -40,50 +40,52 @@ func Connect() {
 
 // migrateWithIndexes handles AutoMigrate + partial unique indexes for nullable tokens
 func migrateWithIndexes(db *gorm.DB) error {
-	log.Println("!!! Wiping database for testing !!!")
-	db.Exec("TRUNCATE TABLE users, leave_requests, approval_actions RESTART IDENTITY CASCADE")
-	// Drop old problematic indexes (fix existing duplicate key errors)
-	indexesToDrop := []string{
-		"idx_leave_requests_hr_token",
-		"idx_leave_requests_md_token",
-		"idx_leave_requests_final_hr_token",
-	}
+    log.Println("!!! Wiping database for testing and development!!!")
+    db.Exec("TRUNCATE TABLE users, leave_requests, approval_actions RESTART IDENTITY CASCADE")
 
-	for _, idx := range indexesToDrop {
-		db.Exec("DROP INDEX IF EXISTS " + idx)
-	}
+    // Drop old problematic indexes (using your new naming convention)
+    indexesToDrop := []string{
+        "idx_leave_requests_resource_token",
+        "idx_leave_requests_director_token",
+        "idx_leave_requests_final_token",
+    }
 
-	// AutoMigrate tables
-	if err := db.AutoMigrate(
-		&models.User{},
-		&models.LeaveRequest{},
-		&models.ApprovalAction{},
-	); err != nil {
-		return fmt.Errorf("automigrate failed: %w", err)
-	}
+    for _, idx := range indexesToDrop {
+        db.Exec("DROP INDEX IF EXISTS " + idx)
+    }
 
-	// Create partial unique indexes (PostgreSQL only - allows multiple NULLs)
-	partialIndexes := map[string]string{
-		"idx_leave_requests_hr_token":       "hr_token",
-		"idx_leave_requests_md_token":       "md_token",
-		"idx_leave_requests_final_hr_token": "final_hr_token",
-	}
+    // AutoMigrate tables (GORM will now create resource_token, director_token, etc.)
+    if err := db.AutoMigrate(
+        &models.User{},
+        &models.LeaveRequest{},
+        &models.ApprovalAction{},
+    ); err != nil {
+        return fmt.Errorf("automigrate failed: %w", err)
+    }
 
-	for idxName, column := range partialIndexes {
-		sql := fmt.Sprintf(
-			"CREATE UNIQUE INDEX %s ON leave_requests (%s) WHERE %s IS NOT NULL",
-			idxName, column, column,
-		)
-		db.Exec(sql) // Ignore errors - index may already exist
-	}
+    // Create partial unique indexes for the NEW column names
+    // This allows multiple NULLs but ensures actual tokens are unique
+    partialIndexes := map[string]string{
+        "idx_leave_requests_resource_token": "resource_token",
+        "idx_leave_requests_director_token": "director_token",
+        "idx_leave_requests_final_token":    "final_token",
+    }
 
-	// Cleanup: Convert empty strings to NULL (fixes your current errors)
-	cleanupSQL := `
-		UPDATE leave_requests SET hr_token = NULL WHERE hr_token = '';
-		UPDATE leave_requests SET md_token = NULL WHERE md_token = '';
-		UPDATE leave_requests SET final_hr_token = NULL WHERE final_hr_token = '';
-	`
-	db.Exec(cleanupSQL)
+    for idxName, column := range partialIndexes {
+        sql := fmt.Sprintf(
+            "CREATE UNIQUE INDEX %s ON leave_requests (%s) WHERE %s IS NOT NULL",
+            idxName, column, column,
+        )
+        db.Exec(sql)
+    }
 
-	return nil
+    // Cleanup: Ensure empty strings from any logic gaps are treated as NULL
+    cleanupSQL := `
+        UPDATE leave_requests SET resource_token = NULL WHERE resource_token = '';
+        UPDATE leave_requests SET director_token = NULL WHERE director_token = '';
+        UPDATE leave_requests SET final_token = NULL WHERE final_token = '';
+    `
+    db.Exec(cleanupSQL)
+
+    return nil
 }

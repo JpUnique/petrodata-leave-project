@@ -219,7 +219,7 @@ main {
   padding: var(--spacing-md);
   font-size: var(--font-size-md);
   color: var(--color-text-primary);
-  min-height: 20px;
+  min-height: 15px;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -247,8 +247,8 @@ legend {
  * Decision field - Highlighted decision display
  */
 .decision-field {
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 500;
+  font-size: 0.8rem;
 }
 
 /* ============================================================================

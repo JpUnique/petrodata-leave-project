@@ -1,6 +1,6 @@
 /**
- * form-style.css - Leave Request Form Stylesheet
- * Styling for the main leave request submission form
+ * approve.css - Compact & Readable Leave Approval Stylesheet
+ * Featuring Zebra Striping and reduced vertical gaps.
  */
 
 /* ============================================================================
@@ -9,71 +9,63 @@
 :root {
   /* Colors */
   --color-primary: #004d40;
-  --color-success: #00e676;
-  --color-error: #ff4d4d;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #aaaaaa;
-  --color-text-tertiary: #888888;
-  --color-input-bg: rgba(255, 255, 255, 0.05);
-  --color-input-bg-focus: rgba(255, 255, 255, 0.08);
-  --color-card-bg: rgba(20, 20, 20, 0.85);
-  --color-white: #ffffff;
-  --color-dark: #1a1a1a;
-  --color-border-light: rgba(255, 255, 255, 0.1);
-  --color-border-lighter: rgba(255, 255, 255, 0.05);
+  --color-success: #00c853;
+  --color-success-dark: #00a040;
+  --color-error: #ff5252;
+  --color-error-dark: #d32f2f;
+  --color-info: #e0f2f1;
+  --color-text-primary: #333;
+  --color-text-secondary: #555;
+  --color-text-tertiary: #666;
+  --color-border: #ddd;
+  --color-background-light: rgba(0, 0, 0, 0.04);
+  --color-zebra: rgba(0, 77, 64, 0.03); /* Subtle tint for zebra rows */
+  --color-white: #fff;
 
-  /* Spacing */
-  --spacing-xs: 5px;
-  --spacing-sm: 10px;
-  --spacing-md: 15px;
-  --spacing-lg: 20px;
-  --spacing-xl: 30px;
-  --spacing-xxl: 40px;
-  --spacing-xxxl: 50px;
+  /* COMPACT Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px; /* Reduced from 15px */
+  --spacing-lg: 16px; /* Reduced from 20px */
+  --spacing-xl: 20px; /* Reduced from 30px */
 
   /* Typography */
   --font-family: "Poppins", sans-serif;
   --font-size-sm: 0.75rem;
-  --font-size-xs: 0.85rem;
+  --font-size-xs: 0.82rem;
   --font-size-base: 0.9rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 2.2rem;
+  --font-size-md: 0.92rem;
 
   /* Border Radius */
-  --border-radius: 12px;
-  --border-radius-lg: 20px;
-  --border-radius-xl: 24px;
+  --border-radius: 6px;
 
   /* Transitions */
-  --transition-base: all 0.3s ease;
-
-  /* Backdrop */
-  --backdrop-blur: blur(20px);
+  --transition-base: all 0.2s ease;
 }
 
 /* ============================================================================
    GLOBAL STYLES
    ============================================================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-/**
- * Body - Main container with background
- */
 body {
   font-family: var(--font-family);
-  background: url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000")
-    no-repeat center center/cover;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: var(--spacing-xxl) var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-md);
+  background: url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000")
+    no-repeat center center/cover;
+  background-attachment: fixed;
   color: var(--color-text-primary);
-  margin: 0;
+  overflow-y: auto;
 }
 
-/**
- * Background overlay - Dark gradient overlay
- */
 .background-overlay {
   position: fixed;
   top: 0;
@@ -92,632 +84,197 @@ body {
 /* ============================================================================
    LAYOUT & CONTAINER STYLES
    ============================================================================ */
-
-/**
- * Form wrapper - Main container
- */
-.form-wrapper {
+main {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-/**
- * Form card - Main card container
- */
-.form-card {
-  background: var(--color-card-bg);
-  backdrop-filter: var(--backdrop-blur);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--border-radius-xl);
-  padding: var(--spacing-xxxl);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
-  position: relative;
-  overflow: hidden;
-}
-
-/**
- * Accent bar - Top gradient bar
- */
-.accent-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 6px;
-  background: linear-gradient(
-    to right,
-    var(--color-error),
-    var(--color-success)
-  );
-  border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
-}
-
-/* ============================================================================
-   HEADER STYLES
-   ============================================================================ */
-
-/**
- * Form header - Header section container
- */
-.form-header {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: var(--spacing-xxl);
+  justify-content: center;
 }
 
-/**
- * Branding center - Logo and title container
- */
-.branding-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.approval-card {
+  max-width: 600px;
   width: 100%;
-}
-
-/**
- * Form logo - Logo image styling
- */
-.form-logo {
-  width: 150px;
-  height: auto;
   background: var(--color-white);
-  padding: var(--spacing-md);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-  margin-bottom: var(--spacing-lg);
-  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: var(--spacing-lg);
+  animation: slideUp 0.5s ease-out;
 }
 
-/**
- * Form header h1 - Main title
- */
-.form-header h1 {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  margin: 0 0 var(--spacing-xs) 0;
-  letter-spacing: 0.5px;
-}
-
-/**
- * Form header p - Subtitle
- */
-.form-header p {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
-  margin: 0;
+.accent-bar {
+  height: 4px;
+  background: var(--color-primary);
+  margin: -16px -16px 16px -16px;
 }
 
 /* ============================================================================
-   FORM SECTION STYLES
+   ZEBRA STRIPING & INFORMATION DISPLAY
    ============================================================================ */
 
 /**
- * Form section - Grouped form content
+ * Zebra Striping: targets every other group of fields
+ * to create visual separation without using borders.
  */
-.form-section {
-  margin-bottom: var(--spacing-xxl);
+.info-group:nth-of-type(even),
+.display-wrapper.full-width:nth-of-type(even) {
+  background-color: var(--color-zebra);
+  margin-left: -12px;
+  margin-right: -12px;
+  padding: 8px 12px;
+  border-radius: 4px;
 }
 
-/**
- * Form section h2 - Section heading
- */
-.form-section h2 {
+.info-group {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.display-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Tight label-to-field gap */
+}
+
+.display-wrapper.full-width {
+  width: 100%;
+  flex: none;
+  margin-bottom: var(--spacing-sm);
+}
+
+.display-wrapper label {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-success);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0 0 var(--spacing-lg) 0;
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: 6px;
+  padding-left: 2px;
 }
 
-.form-section h2 i {
-  font-size: 1rem;
+.display-wrapper label i {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  width: 16px;
 }
 
-/**
- * Grid row - Two-column layout
- */
-.grid-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-xl);
+.data-field {
+  background: var(--color-background-light);
+  padding: 6px 10px; /* Compact internal padding */
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  border-radius: 4px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* ============================================================================
+   SECTIONS & AUDIT TRAIL
+   ============================================================================ */
+fieldset {
+  border: none;
   margin-bottom: var(--spacing-lg);
 }
 
-/* ============================================================================
-   INPUT STYLES
-   ============================================================================ */
-
-/**
- * Input group - Form field container
- */
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+.audit-section h2,
+.forwarding-box h3 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-primary);
 }
 
-.input-group.full-width {
-  grid-column: span 2;
-}
-
-/**
- * Input group label - Field labels
- */
-.input-group label {
-  font-size: var(--font-size-md);
-  font-weight: 500;
-  color: var(--color-error);
-  display: block;
-}
-
-/**
- * Input elements - Text, email, date, select inputs
- */
-.input-group input,
-.input-group select,
-.input-group textarea {
-  width: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border-light);
+.status-banner {
+  padding: var(--spacing-md);
+  background: var(--color-info);
   border-radius: var(--border-radius);
-  color: var(--color-text-primary);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  transition: var(--transition-base);
-  box-sizing: border-box;
-}
-
-.input-group input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.input-group input:focus,
-.input-group select:focus,
-.input-group textarea:focus {
-  border-color: var(--color-success);
-  background: var(--color-input-bg-focus);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.1);
-}
-
-/**
- * Read-only inputs - Disabled/readonly state
- */
-.input-group input[readonly] {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--color-success);
-  cursor: not-allowed;
-  border-color: rgba(0, 230, 118, 0.2);
-}
-
-.input-group input[readonly]:focus {
-  border-color: rgba(0, 230, 118, 0.2);
-  box-shadow: none;
-}
-
-/**
- * Select options - Dropdown styling
- */
-.input-group select option {
-  background: var(--color-dark);
-  color: var(--color-text-primary);
-}
-
-/**
- * Helper text - Small descriptive text
- */
-.helper-text {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
-  font-style: italic;
-  margin-top: var(--spacing-xs);
-}
-
-/**
- * Target all inputs (including date and select) when they have a value.
- * This ensures they match the 'Staff Name' and 'Staff Number' style.
- */
-.input-group input.has-value,
-.input-group select.has-value,
-.input-group textarea.has-value {
-  background: var(--color-white) !important;
-  color: var(--color-dark) !important;
-  border-color: var(--color-success);
-}
-
-/**
- * Special handling for the 'Total Days' field to make it look distinct
- * as a calculated field while still being readable.
- */
-#totalDays.has-value {
-  background: rgba(0, 230, 118, 0.1) !important; /* Light green tint */
-  color: var(--color-success) !important;
+  color: var(--color-primary);
+  text-align: center;
   font-weight: 600;
-  border: 1px dashed var(--color-success);
-}
-
-/**
- * Ensures the date picker icon remains visible/correctly colored
- * when the background turns white.
- */
-.input-group input[type="date"].has-value::-webkit-calendar-picker-indicator {
-  filter: invert(0); /* Keeps icon dark on white background */
+  margin: var(--spacing-md) 0;
+  border: 1px dashed var(--color-primary);
+  font-size: var(--font-size-base);
 }
 
 /* ============================================================================
-   WORKFLOW SECTION
+   BUTTONS & ACTIONS
    ============================================================================ */
+.approval-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
 
-/**
- * Workflow card - Approval workflow section
- */
-.workflow-card {
+.btn-action {
+  flex: 1;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 12px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: var(--transition-base);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-white);
+}
+
+.btn-approve {
   background: linear-gradient(
     135deg,
-    rgba(211, 47, 47, 0.1),
-    rgba(46, 125, 50, 0.1)
+    var(--color-success) 0%,
+    var(--color-success-dark) 100%
   );
-  padding: var(--spacing-xl);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--color-border-lighter);
-  margin: var(--spacing-xxl) 0;
 }
-
-.workflow-card h2 {
-  margin-top: 0;
-}
-
-/**
- * Workflow content - Content container
- */
-.workflow-content p {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
-  margin: var(--spacing-md) 0 var(--spacing-lg) 0;
-}
-
-/**
- * Email input wrapper - Special styling for email input
- */
-.email-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: var(--color-white);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-sm);
-  margin-top: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  transition: var(--transition-base);
-  height: 52px;
-}
-
-.email-input-wrapper:focus-within {
-  box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.2);
-}
-
-/**
- * Email input wrapper icon
- */
-.email-input-wrapper i {
-  margin: 0 var(--spacing-md);
-  color: #666;
-  flex-shrink: 0;
-  font-size: 1.2rem;
-}
-
-/**
- * Email input field
- */
-.email-input-wrapper input {
-  border: none;
-  background: transparent;
-  color: #333;
-  padding: var(--spacing-md) var(--spacing-md);
-  flex-grow: 1;
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.email-input-wrapper input::placeholder {
-  color: #999;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.email-input-wrapper input:focus {
-  background: transparent;
-  border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-/* ============================================================================
-   BUTTON STYLES
-   ============================================================================ */
-
-/**
- * Inline send button - Submit button in email section
- */
-.btn-inline-send {
-  background: var(--color-success);
-  color: var(--color-dark);
-  border: none;
-  padding: var(--spacing-md) var(--spacing-xl);
-  border-radius: var(--border-radius);
-  font-family: var(--font-family);
-  font-weight: 600;
-  font-size: var(--font-size-base);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  transition: var(--transition-base);
-  margin-left: var(--spacing-lg);
-  text-transform: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-  height: 52px;
-  min-width: 140px;
-}
-
-.btn-inline-send:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
-}
-
-.btn-inline-send:active {
-  transform: scale(0.98);
-}
-
-/**
- * Logout button - Sign out button
- */
-.btn-logout {
-  background: transparent;
-  color: var(--color-error);
-  border: 1px solid var(--color-error);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--border-radius);
-  font-family: var(--font-family);
-  font-weight: 500;
-  font-size: var(--font-size-base);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  transition: var(--transition-base);
-}
-
-.btn-logout:hover {
-  background: rgba(255, 77, 77, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 77, 77, 0.2);
-}
-
-.btn-logout:active {
-  transform: translateY(0);
-}
-
-/* ============================================================================
-   FOOTER STYLES
-   ============================================================================ */
-
-/**
- * Footer actions - Footer section container
- */
-.footer-actions {
-  margin-top: var(--spacing-xxxl);
-  text-align: center;
-}
-
-/**
- * Footer divider - Horizontal line
- */
-.footer-actions hr {
-  border: 0;
-  height: 1px;
+.btn-reject {
   background: linear-gradient(
-    to right,
-    transparent,
-    var(--color-border-light),
-    transparent
+    135deg,
+    var(--color-error) 0%,
+    var(--color-error-dark) 100%
   );
-  margin: 0 0 var(--spacing-xl) 0;
 }
 
-/**
- * Logout wrapper - Logout section container
- */
-.logout-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-lg);
-}
-
-.logout-wrapper p {
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-  margin: 0;
+.btn-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 /* ============================================================================
-   RESPONSIVE DESIGN
+   UTILITIES & ANIMATIONS
    ============================================================================ */
+.hidden {
+  display: none !important;
+}
 
-/**
- * Tablet and below
- */
-@media (max-width: 768px) {
-  body {
-    padding: var(--spacing-lg);
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
   }
-
-  .form-card {
-    padding: var(--spacing-xl) var(--spacing-lg);
-  }
-
-  .grid-row {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-  }
-
-  .input-group.full-width {
-    grid-column: span 1;
-  }
-
-  .email-input-wrapper {
-    flex-direction: column;
-    background: transparent;
-    padding: 0;
-    gap: var(--spacing-md);
-  }
-
-  .email-input-wrapper i {
-    margin: 0;
-  }
-
-  .email-input-wrapper input {
-    background: var(--color-white);
-    color: #333;
-    width: 100%;
-    border-radius: var(--border-radius);
-    padding-left: var(--spacing-lg);
-  }
-
-  .email-input-wrapper input:focus {
-    background: rgba(255, 255, 255, 0.95);
-  }
-
-  .btn-inline-send {
-    width: 100%;
-    justify-content: center;
-    margin-left: 0;
-  }
-
-  .form-logo {
-    width: 120px;
-  }
-
-  .form-header h1 {
-    font-size: 1.8rem;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/**
- * Mobile devices
- */
 @media (max-width: 480px) {
-  body {
-    padding: var(--spacing-lg) var(--spacing-sm);
+  .info-group {
+    flex-direction: column;
+    gap: var(--spacing-sm);
   }
-
-  .form-card {
-    padding: var(--spacing-lg) var(--spacing-md);
-    border-radius: var(--border-radius-lg);
+  .approval-actions {
+    flex-direction: column;
   }
-
-  .form-logo {
-    width: 100px;
-    margin-bottom: var(--spacing-md);
-  }
-
-  .form-header h1 {
-    font-size: 1.5rem;
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .form-header p {
-    font-size: 0.75rem;
-  }
-
-  .form-section {
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .form-section h2 {
-    font-size: 0.75rem;
-    margin-bottom: var(--spacing-md);
-  }
-
-  .grid-row {
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-  }
-
-  .input-group input,
-  .input-group select,
-  .input-group textarea {
-    padding: var(--spacing-md) var(--spacing-md);
-    font-size: var(--font-size-xs);
-  }
-
-  .input-group label {
-    font-size: var(--font-size-xs);
-  }
-
-  .workflow-card {
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
-
-  .btn-inline-send {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-xs);
-  }
-
-  .footer-actions {
-    margin-top: var(--spacing-xl);
-  }
-
-  .logout-wrapper gap {
-    gap: var(--spacing-md);
-  }
-}
-
-/* ============================================================================
-   ACCESSIBILITY
-   ============================================================================ */
-
-/**
- * Focus visible styles for keyboard navigation
- */
-.input-group input:focus-visible,
-.input-group select:focus-visible,
-.input-group textarea:focus-visible {
-  outline: 2px solid var(--color-success);
-  outline-offset: 2px;
-}
-
-.btn-inline-send:focus-visible,
-.btn-logout:focus-visible {
-  outline: 2px solid var(--color-success);
-  outline-offset: 2px;
-}
-
-/**
- * Reduced motion preferences
- */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .info-group:nth-of-type(even) {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
