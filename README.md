@@ -37,18 +37,6 @@ Located in `service/emailer.go`, it handles multi-part emails with Base64-encode
 
 The system uses unique, non-sequential UUIDs for every approval stage. This allows managers and executives to take action directly from their email without requiring a full login session for every click.
 
-## ⚙️ Environment Variables
-
-To run this system, create a `.env` file in the root directory:
-
-```env
-PORT=8080
-DB_URL=postgres://user:password@localhost:5432/petrodata_leave
-MAILERSEND_API_KEY=mlsn.your_api_key_here
-FROM_EMAIL=notifications@petrodata.net
-UNIPDF_LICENSE_KEY=optional_if_using_maroto
-
-```
 
 ## 🛠 Installation & Local Development
 
