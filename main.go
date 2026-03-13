@@ -66,6 +66,7 @@ func main() {
 	mux.HandleFunc("/api/leave/md-details", handlers.GetLeaveRequestByMDToken)
 	mux.HandleFunc("/api/leave/md-action", handlers.HandleMDAction)
 	mux.HandleFunc("/api/leave/final-details", handlers.GetFinalArchiveDetails)
+	mux.HandleFunc("/api/leave/download-pdf", handlers.DownloadAndArchiveLeavePDF)
 
 	// 5. Setup CORS
 	c := cors.New(cors.Options{

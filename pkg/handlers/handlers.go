@@ -848,3 +848,40 @@ func HandleMDAction(w http.ResponseWriter, r *http.Request) {
 		"status":  leaveReq.Status,
 	})
 }
+
+func DownloadAndArchiveLeavePDF(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+
+	// 1. Fetch Request from DB
+	var leave models.LeaveRequest
+	if err := database.DB.Where("final_token = ?", token).First(&leave).Error; err != nil {
+		http.Error(w, "Leave record not found", http.StatusNotFound)
+		return
+	}
+
+	// 2. Generate the PDF bytes
+	pdfBytes, err := service.GenerateLeavePDF(leave)
+	if err != nil {
+		http.Error(w, "Failed to generate PDF", 500)
+		return
+	}
+
+	// 3. Email Staff and HR (Run in background)
+	go func() {
+		subject := "Finalized Leave Record: " + leave.StaffName
+		body := "<p>Attached is the official record of your leave request approval.</p>"
+
+		// Email to Staff
+		service.SendEmailAttachment(leave.StaffEmail, subject, body, pdfBytes, "Leave_Record.pdf")
+
+		// Email to HR (assuming leave.HREmail exists)
+		if leave.HREmail != "" {
+			service.SendEmailAttachment(leave.HREmail, subject, body, pdfBytes, "Leave_Record.pdf")
+		}
+	}()
+
+	// 4. Force Download in Browser
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=Leave_Record_%s.pdf", leave.StaffNo))
+	w.Write(pdfBytes)
+}

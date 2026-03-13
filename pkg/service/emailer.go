@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"time"
@@ -314,5 +315,39 @@ func SendEmailWithAttachment(toEmail, subject, html, filePath, fileName string) 
 	}
 
 	fmt.Printf("Email with attachment sent. Message ID: %s\n", res.Header.Get("X-Message-Id"))
+	return nil
+}
+
+// SendEmailWithRawAttachment sends an email using raw bytes instead of a file path
+func SendEmailAttachment(toEmail, subject, html string, content []byte, fileName string) error {
+	// 1. Encode the raw bytes directly to base64
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	recipients := []mailersend.Recipient{{Email: toEmail}}
+
+	message := mailerSendClient.Email.NewMessage()
+	message.SetFrom(fromEmail)
+	message.SetRecipients(recipients)
+	message.SetSubject(subject)
+	message.SetHTML(html)
+	message.SetText(stripHTML(html))
+
+	// 2. Add attachment using the encoded string
+	attachment := mailersend.Attachment{
+		Filename:    fileName,
+		Content:     encoded,
+		Disposition: "attachment",
+	}
+	message.AddAttachment(attachment)
+
+	res, err := mailerSendClient.Email.Send(ctx, message)
+	if err != nil {
+		return fmt.Errorf("failed to send email with raw attachment: %w", err)
+	}
+
+	log.Printf("[INFO] Email with PDF attachment sent to %s. ID: %s", toEmail, res.Header.Get("X-Message-Id"))
 	return nil
 }

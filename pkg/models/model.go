@@ -35,9 +35,9 @@ type LeaveRequest struct {
 	Status string `gorm:"default:'Pending'" json:"status"`
 
 	// Specific Decisions (To show in UI)
-	ManagerDecision string `json:"manager_decision"` // Will store "Approved" or "Rejected"
-	HRDecision      string `json:"resource_decision"`      // Will store "Approved" or "Rejected"
-	MDDecision      string `json:"director_decision"`      // Store MD's "Approved" or "Rejected"
+	ManagerDecision string `json:"manager_decision"`  // Will store "Approved" or "Rejected"
+	HRDecision      string `json:"resource_decision"` // Will store "Approved" or "Rejected"
+	MDDecision      string `json:"director_decision"` // Store MD's "Approved" or "Rejected"
 
 	// Booleans for quick checks
 	ManagerApproved bool `gorm:"default:false" json:"manager_approved"`
@@ -46,9 +46,9 @@ type LeaveRequest struct {
 
 	// Security Tokens for the Links
 	RequestToken *string `gorm:"uniqueIndex" json:"request_token"`            // Manager's link
-	HRToken      *string `gorm:"column:resource_token" json:"resource_token"`             // HR's link
-	MDToken      *string `gorm:"column:director_token" json:"director_token"`             // MD's link (Added)
-	FinalHRToken *string `gorm:"column:final_token" json:"final_token"` // Added for the Archive/PDF page
+	HRToken      *string `gorm:"column:resource_token" json:"resource_token"` // HR's link
+	MDToken      *string `gorm:"column:director_token" json:"director_token"` // MD's link (Added)
+	FinalHRToken *string `gorm:"column:final_token" json:"final_token"`       // Added for the Archive/PDF page
 
 	CreatedAt time.Time `json:"created_at"`
 }

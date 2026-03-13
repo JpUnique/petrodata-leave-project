@@ -33,15 +33,6 @@ const CONFIG = {
     PDF_SUCCESS: "Official Leave Record downloaded.",
     SYSTEM_ERROR: "System configuration error.",
   },
-  PDF: {
-    MARGIN: [10, 5, 10, 5], // Top, Left, Bottom, Right
-    IMAGE_TYPE: "jpeg",
-    IMAGE_QUALITY: 1.0,
-    HTML2CANVAS_SCALE: 3,
-    PDF_UNIT: "mm",
-    PDF_FORMAT: "a4",
-    PDF_ORIENTATION: "portrait",
-  },
 };
 
 // ============================================================================
@@ -243,57 +234,23 @@ function displayDecisionAuditTrail(data) {
  * Generate and download PDF of the leave request archive
  * @param {string} staffName - Staff member name for filename
  */
-async function generatePDF(staffName) {
-  if (!staffName) {
-    console.error("Staff name is required for PDF generation");
-    showError(CONFIG.MESSAGES.SYSTEM_ERROR);
+function generatePDF() {
+  const token = getUrlParameter("final_token");
+
+  if (!token) {
+    showError(CONFIG.MESSAGES.NO_TOKEN);
     return;
   }
 
-  const printableArea = getElement(CONFIG.DOM_IDS.PRINTABLE_AREA);
-  if (!printableArea) {
-    console.error("Printable area element not found");
-    showError(CONFIG.MESSAGES.SYSTEM_ERROR);
-    return;
-  }
+  // Show a quick notification so the user knows something is happening
+  showSuccess("Processing", CONFIG.MESSAGES.PDF_START);
 
-  // Show loading dialog
-  showLoading(
-    CONFIG.MESSAGES.PDF_GENERATING,
-    CONFIG.MESSAGES.PDF_GENERATING_MSG,
-  );
+  // Construct the URL for the Go PDF handler
+  // window.location.href triggers the browser's download manager
+  const downloadUrl = `${CONFIG.API.DOWNLOAD_PDF}?token=${token}`;
 
-  try {
-    // Configure PDF generation options
-    const pdfOptions = {
-      margin: CONFIG.PDF.MARGIN,
-      filename: `PetroData_Leave_${sanitizeFileName(staffName)}.pdf`,
-      image: {
-        type: CONFIG.PDF.IMAGE_TYPE,
-        quality: CONFIG.PDF.IMAGE_QUALITY,
-      },
-      html2canvas: {
-        scale: CONFIG.PDF.HTML2CANVAS_SCALE,
-        useCORS: true,
-        letterRendering: true,
-        logging: false,
-      },
-      jsPDF: {
-        unit: CONFIG.PDF.PDF_UNIT,
-        format: CONFIG.PDF.PDF_FORMAT,
-        orientation: CONFIG.PDF.PDF_ORIENTATION,
-      },
-    };
-
-    // Generate and save PDF
-    await html2pdf().set(pdfOptions).from(printableArea).save();
-
-    // Show success message
-    showSuccess("Success", CONFIG.MESSAGES.PDF_SUCCESS);
-  } catch (error) {
-    console.error("PDF Generation Error:", error);
-    showError(`Failed to generate PDF: ${error.message}`);
-  }
+  // Redirect to download
+  window.location.href = downloadUrl;
 }
 
 /**
@@ -307,7 +264,7 @@ function setupPDFButton(staffName) {
   }
 
   downloadBtn.addEventListener("click", () => {
-    generatePDF(staffName);
+    generatePDF();
   });
 }
 
@@ -339,7 +296,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     populateArchiveUI(data);
 
     // Setup PDF download button
-    setupPDFButton(data.staff_name);
+    setupPDFButton();
 
     console.log("Archive page loaded successfully");
   } catch (error) {
