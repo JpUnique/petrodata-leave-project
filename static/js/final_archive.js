@@ -1,6 +1,7 @@
 const CONFIG = {
   API: {
     FETCH_DETAILS: "/api/leave/final-details",
+    DOWNLOAD_PDF: "/api/leave/download-pdf",
   },
   DOM_IDS: {
     DOWNLOAD_PDF_BTN: "downloadPdfBtn",
@@ -250,6 +251,7 @@ function generatePDF() {
   const downloadUrl = `${CONFIG.API.DOWNLOAD_PDF}?token=${token}`;
 
   // Redirect to download
+  console.log("Downloading from:", downloadUrl);
   window.location.href = downloadUrl;
 }
 
