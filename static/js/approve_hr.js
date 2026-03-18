@@ -88,6 +88,8 @@ function populateUI(data) {
     displayStaffNo: "staff_no",
     displayDesignation: "designation",
     displayDept: "department",
+    displayPhone: "phone_number", // NEW
+    displayDateEmployed: "date_employed", // NEW
     displayType: "leave_type",
     displayStart: "start_date",
     displayEnd: "resumption_date",
@@ -99,6 +101,19 @@ function populateUI(data) {
     const el = getElement(id);
     if (el) el.textContent = data[key] || "N/A";
   });
+
+  // NEW: Handle Leave Allowance Boolean Visualization for HR
+  const allowanceEl = getElement("displayAllowance");
+  if (allowanceEl) {
+    if (data.leave_allowance_request) {
+      allowanceEl.textContent = "YES (Requested)";
+      allowanceEl.style.color = CONFIG.COLORS.SUCCESS;
+      allowanceEl.style.fontWeight = "bold";
+    } else {
+      allowanceEl.textContent = "NO";
+      allowanceEl.style.color = CONFIG.COLORS.NEUTRAL;
+    }
+  }
 
   const totalDaysEl = getElement("displayTotalDays");
   if (totalDaysEl) {

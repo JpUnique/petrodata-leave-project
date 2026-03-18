@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const nameInput = document.getElementById("staffName");
   const noInput = document.getElementById("staffNo");
 
+  // New Fields Inputs
+  const dateEmployedInput = document.getElementById("dateEmployed");
+  const phoneNumberInput = document.getElementById("phoneNumber");
+  const allowanceToggle = document.getElementById("allowanceRequest");
+
   // Spinner Elements
   const submitBtn = document.getElementById("sendRequestBtn");
   const btnText = document.getElementById("btnText");
@@ -85,6 +90,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const payload = {
       designation: document.getElementById("designation").value,
       department: document.getElementById("department").value,
+      date_employed: dateEmployedInput ? dateEmployedInput.value : "", // NEW
+      phone_number: phoneNumberInput ? phoneNumberInput.value : "", // NEW
+      leave_allowance_request: allowanceToggle
+        ? allowanceToggle.checked
+        : false, // NEW (Boolean)
       leave_type: document.getElementById("leaveType").value,
       start_date: startDateInput.value,
       resumption_date: resumptionDateInput.value,
@@ -112,32 +122,52 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(payload),
         },
       );
+      const result = await response.json();
 
-      if (response.ok) {
-        const result = await response.json();
-        Swal.fire({
-          title: "Success!",
-          text: result.message || "Request saved and link sent to Manager.",
-          icon: "success",
-          confirmButtonColor: "#004d40",
-        }).then(() => {
-          leaveForm.reset();
-          totalDaysInput.value = "";
-          totalDaysInput.classList.remove("has-value");
-          // Re-fill non-form staff details after reset
-          if (nameInput) nameInput.value = savedName || "";
-          if (noInput) noInput.value = savedStaffNo || "";
-        });
+      // --- NEW ERROR HANDLING FOR HR POLICY ---
+      if (response.status === 400) {
+        // Specifically for "Limit Exceeded"
+        throw new Error(
+          result.error || result.message || "Leave entitlement limit exceeded.",
+        );
+      } else if (response.status === 403) {
+        // Specifically for "Staff not in HR list"
+        throw new Error(
+          result.error ||
+            "Access Denied: You are not registered in the HR Leave Database.",
+        );
       } else if (response.status === 401) {
         localStorage.removeItem(CONFIG.STORAGE.AUTH_TOKEN);
         window.location.href = "login.html";
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Server error");
+        return;
+      } else if (!response.ok) {
+        throw new Error(result.error || "Submission failed.");
       }
+
+      // --- SUCCESS CASE ---
+      Swal.fire({
+        title: "Request Submitted!",
+        text:
+          result.message ||
+          "Your request is within policy and has been sent to your Manager.",
+        icon: "success",
+        confirmButtonColor: "#004d40",
+      }).then(() => {
+        leaveForm.reset();
+        totalDaysInput.value = "";
+        totalDaysInput.classList.remove("has-value");
+        if (nameInput) nameInput.value = savedName || "";
+        if (noInput) noInput.value = savedStaffNo || "";
+      });
     } catch (error) {
       console.error("Submission Error:", error);
-      Swal.fire("Error", error.message || "Submission failed.", "error");
+      // Enhanced error popup for Policy Violations
+      Swal.fire({
+        title: "Submission Blocked",
+        text: error.message,
+        icon: "warning",
+        confirmButtonColor: "#b71c1c",
+      });
     } finally {
       // --- RESET LOADING STATE ---
       submitBtn.disabled = false;

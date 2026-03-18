@@ -72,6 +72,8 @@ function populateUI(data) {
     displayStaffNo: "staff_no",
     displayDesignation: "designation",
     displayDept: "department",
+    displayPhone: "phone_number",
+    displayDateEmployed: "date_employed",
     displayType: "leave_type",
     displayStart: "start_date",
     displayEnd: "resumption_date",
@@ -141,7 +143,7 @@ async function processFinalDecision(token, decision, staffName) {
     showCancelButton: true,
     confirmButtonColor: getDecisionColor(decision),
     cancelButtonColor: CONFIG.COLORS.NEUTRAL,
-    confirmButtonText: "Yes, Proceed",
+    confirmButtonText: "Yes, Finalize",
   });
 
   if (!confirmResult.isConfirmed) return;

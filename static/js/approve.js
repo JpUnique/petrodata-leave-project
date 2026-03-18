@@ -115,6 +115,8 @@ function populateUI(data) {
     displayStaffNo: "staff_no",
     displayDesignation: "designation",
     displayDept: "department",
+    displayPhone: "phone_number",
+    displayDateEmployed: "date_employed",
     displayType: "leave_type",
     displayStart: "start_date",
     displayEnd: "resumption_date",
@@ -130,6 +132,18 @@ function populateUI(data) {
       element.textContent = data[dataKey] || "N/A";
     }
   });
+  // NEW: Handle Leave Allowance Boolean Visualization
+  const allowanceElement = getElement("displayAllowance");
+  if (allowanceElement) {
+    if (data.leave_allowance_request) {
+      allowanceElement.textContent = "YES (Requested)";
+      allowanceElement.style.color = CONFIG.COLORS.SUCCESS;
+      allowanceElement.style.fontWeight = "bold";
+    } else {
+      allowanceElement.textContent = "NO";
+      allowanceElement.style.color = CONFIG.COLORS.NEUTRAL;
+    }
+  }
 
   // Handle total days with formatting
   const totalDaysElement = getElement("displayTotalDays");
@@ -141,9 +155,13 @@ function populateUI(data) {
   if (data.status !== CONFIG.STATUS.PENDING) {
     const actionButtons = getElement("actionButtons");
     const statusMessage = getElement("statusMessage");
+    const hrEmailContainer = getElement("hrEmailContainer");
 
     if (actionButtons) {
       actionButtons.classList.add("hidden");
+    }
+    if (hrEmailContainer) {
+      hrEmailContainer.classList.add("hidden");
     }
 
     if (statusMessage) {

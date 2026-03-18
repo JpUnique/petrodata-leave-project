@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
@@ -13,18 +17,21 @@ type User struct {
 }
 
 type LeaveRequest struct {
-	ID             uint   `gorm:"primaryKey" json:"id"`
-	StaffName      string `json:"staff_name"`
-	StaffEmail     string `json:"staff_email"`
-	StaffNo        string `json:"staff_no"`
-	Designation    string `json:"designation"`
-	Department     string `json:"department"`
-	LeaveType      string `json:"leave_type"`
-	StartDate      string `json:"start_date"`
-	ResumptionDate string `json:"resumption_date"`
-	TotalDays      int    `json:"total_days"`
-	ReliefStaff    string `json:"relief_staff"`
-	ContactAddress string `json:"contact_address"`
+	ID                    uint   `gorm:"primaryKey" json:"id"`
+	StaffName             string `json:"staff_name"`
+	StaffEmail            string `json:"staff_email"`
+	StaffNo               string `json:"staff_no"`
+	Designation           string `json:"designation"`
+	Department            string `json:"department"`
+	LeaveType             string `json:"leave_type"`
+	StartDate             string `json:"start_date"`
+	ResumptionDate        string `json:"resumption_date"`
+	TotalDays             int    `json:"total_days"`
+	ReliefStaff           string `json:"relief_staff"`
+	ContactAddress        string `json:"contact_address"`
+	DateEmployed          string `json:"date_employed"` // NEW
+	PhoneNumber           string `json:"phone_number"`
+	LeaveAllowanceRequest bool   `json:"leave_allowance_request"`
 
 	// Workflow Emails
 	ManagerEmail string `json:"manager_email"`
@@ -58,4 +65,13 @@ type ApprovalAction struct {
 	Approver   string    `json:"approver"`
 	Signature  string    `json:"signature"`
 	ActionDate time.Time `json:"action_date"`
+}
+
+// StaffRecord stores the HR-provided entitlement data
+type StaffRecord struct {
+	gorm.Model
+	Name             string `gorm:"index" json:"name"`
+	StaffID          string `gorm:"uniqueIndex" json:"staff_id"`
+	Email            string `gorm:"uniqueIndex" json:"email"`
+	LeaveEntitlement int    `json:"leave_entitlement"`
 }

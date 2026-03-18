@@ -11,7 +11,10 @@ const CONFIG = {
     STAFF_NO: "displayStaffNo",
     DEPT: "displayDept",
     DESIGNATION: "displayDesignation",
+    PHONE: "displayPhone",
+    DATE_EMPLOYED: "displayDateEmployed",
     LEAVE_TYPE: "displayType",
+    ALLOWANCE: "displayAllowance",
     TOTAL_DAYS: "displayTotalDays",
     START_DATE: "displayStart",
     END_DATE: "displayEnd",
@@ -162,6 +165,8 @@ function populateArchiveUI(data) {
     STAFF_NO: "staff_no",
     DEPT: "department",
     DESIGNATION: "designation",
+    PHONE: "phone_number",
+    DATE_EMPLOYED: "date_employed",
     LEAVE_TYPE: "leave_type",
     START_DATE: "start_date",
     END_DATE: "resumption_date",
@@ -177,6 +182,15 @@ function populateArchiveUI(data) {
       element.textContent = data[dataKey] || "N/A";
     }
   });
+  const allowanceEl = getElement(CONFIG.DOM_IDS.ALLOWANCE);
+  if (allowanceEl) {
+    allowanceEl.textContent = data.leave_allowance_request
+      ? "YES (Requested)"
+      : "NO";
+    allowanceEl.style.color = data.leave_allowance_request
+      ? CONFIG.COLORS.APPROVED
+      : CONFIG.COLORS.NEUTRAL;
+  }
 
   // Handle total days with formatting
   const totalDaysElement = getElement(CONFIG.DOM_IDS.TOTAL_DAYS);

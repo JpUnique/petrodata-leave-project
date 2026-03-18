@@ -326,21 +326,36 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 	userStaffNo, _ := r.Context().Value("userStaffNo").(string)
 
 	var reqBody struct {
-		Designation    string `json:"designation"`
-		Department     string `json:"department"`
-		LeaveType      string `json:"leave_type"`
-		StartDate      string `json:"start_date"`
-		ResumptionDate string `json:"resumption_date"`
-		TotalDays      int    `json:"total_days"`
-		ReliefStaff    string `json:"relief_staff"`
-		ContactAddress string `json:"contact_address"`
-		ManagerEmail   string `json:"manager_email"`
-		// Don't accept StaffEmail, StaffName, StaffNo from client
+		Designation           string `json:"designation"`
+		Department            string `json:"department"`
+		DateEmployed          string `json:"date_employed"`
+		PhoneNumber           string `json:"phone_number"`
+		LeaveAllowanceRequest bool   `json:"leave_allowance_request"`
+		LeaveType             string `json:"leave_type"`
+		StartDate             string `json:"start_date"`
+		ResumptionDate        string `json:"resumption_date"`
+		TotalDays             int    `json:"total_days"`
+		ReliefStaff           string `json:"relief_staff"`
+		ContactAddress        string `json:"contact_address"`
+		ManagerEmail          string `json:"manager_email"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		log.Printf("[ERROR] Failed to decode leave request body: %v", err)
 		respondError(w, http.StatusBadRequest, ErrMalformedRequest)
+		return
+	}
+	// 3. POLICY CHECK: Validate against HR Entitlement
+	var policy models.StaffRecord
+	if err := database.DB.Where("email = ?", userEmail).First(&policy).Error; err != nil {
+		log.Printf("[WARN] Staff record not found for policy check: %s", userEmail)
+		respondError(w, http.StatusForbidden, "You are not registered in the HR Leave Database. Please contact HR.")
+		return
+	}
+
+	if reqBody.TotalDays > policy.LeaveEntitlement {
+		msg := fmt.Sprintf("Policy Violation: Your leave entitlement is %d days, but you requested %d days.", policy.LeaveEntitlement, reqBody.TotalDays)
+		respondError(w, http.StatusBadRequest, msg) // This triggers the frontend SweetAlert
 		return
 	}
 
@@ -358,27 +373,30 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Build leave request with data from AUTHENTICATED session (not client)
 	leaveReq := models.LeaveRequest{
-		StaffName:       userName,    // From auth context
-		StaffEmail:      userEmail,   // From auth context - TRUSTED
-		StaffNo:         userStaffNo, // From auth context
-		Designation:     reqBody.Designation,
-		Department:      reqBody.Department,
-		LeaveType:       reqBody.LeaveType,
-		StartDate:       reqBody.StartDate,
-		ResumptionDate:  reqBody.ResumptionDate,
-		TotalDays:       reqBody.TotalDays,
-		ReliefStaff:     reqBody.ReliefStaff,
-		ContactAddress:  reqBody.ContactAddress,
-		ManagerEmail:    reqBody.ManagerEmail,
-		Status:          StatusPending,
-		ManagerApproved: false,
-		HRApproved:      false,
-		MDApproved:      false,
-		RequestToken:    stringPtr(reqToken), // ✓ Now *string
-		HRToken:         nil,                 // ✓ NULL in DB
-		MDToken:         nil,                 // ✓ NULL in DB
-		FinalHRToken:    nil,                 // ✓ NULL in DB
-		CreatedAt:       time.Now(),
+		StaffName:             userName,    // From auth context
+		StaffEmail:            userEmail,   // From auth context - TRUSTED
+		StaffNo:               userStaffNo, // From auth context
+		Designation:           reqBody.Designation,
+		Department:            reqBody.Department,
+		DateEmployed:          reqBody.DateEmployed, // SAVED TO DB
+		PhoneNumber:           reqBody.PhoneNumber,  // SAVED TO DB
+		LeaveAllowanceRequest: reqBody.LeaveAllowanceRequest,
+		LeaveType:             reqBody.LeaveType,
+		StartDate:             reqBody.StartDate,
+		ResumptionDate:        reqBody.ResumptionDate,
+		TotalDays:             reqBody.TotalDays,
+		ReliefStaff:           reqBody.ReliefStaff,
+		ContactAddress:        reqBody.ContactAddress,
+		ManagerEmail:          reqBody.ManagerEmail,
+		Status:                StatusPending,
+		ManagerApproved:       false,
+		HRApproved:            false,
+		MDApproved:            false,
+		RequestToken:          stringPtr(reqToken), // ✓ Now *string
+		HRToken:               nil,                 // ✓ NULL in DB
+		MDToken:               nil,                 // ✓ NULL in DB
+		FinalHRToken:          nil,                 // ✓ NULL in DB
+		CreatedAt:             time.Now(),
 	}
 
 	log.Printf("[INFO] Attempting to save leave request for Staff: %s (Token: %s)", leaveReq.StaffName, reqToken)
@@ -404,6 +422,7 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		"message":       fmt.Sprintf("Leave request submitted successfully for %s", leaveReq.StaffName),
 		"request_token": reqToken, // ✓ Use string variable
 		"status":        leaveReq.Status,
+		"entitlement":   policy.LeaveEntitlement, // Optional: return this to UI
 	})
 }
 
