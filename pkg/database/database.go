@@ -113,6 +113,7 @@ func SeedStaffRecords(db *gorm.DB) {
 		{Name: "Edem Joseph", StaffID: "M/01/04/2010/0033", Email: "joseph.edem@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Osu Moses Ikechukwu", StaffID: "M/01/12/2010/0035", Email: "moses.osu@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Oguntonade Moboluwaduro", StaffID: "M/22/09/2025/0089", Email: "Moboluwaduro.oguntonade@petrodata.net", LeaveEntitlement: 20},
+		{Name: "Nwaekwu Chukwuebuka Johnpaul", StaffID: "04/M/1879/234", Email: "ITools@petrodata.net", LeaveEntitlement: 20},
 	}
 
 	for _, staff := range staffList {

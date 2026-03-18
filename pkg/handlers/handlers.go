@@ -349,7 +349,7 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 	var policy models.StaffRecord
 	if err := database.DB.Where("email = ?", userEmail).First(&policy).Error; err != nil {
 		log.Printf("[WARN] Staff record not found for policy check: %s", userEmail)
-		respondError(w, http.StatusForbidden, "You are not registered in the HR Leave Database. Please contact HR.")
+		respondError(w, http.StatusForbidden, "You are not valid for a Leave. Please contact HR.")
 		return
 	}
 
