@@ -346,7 +346,11 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, ErrMalformedRequest)
 		return
 	}
-	rawEmail, _ := r.Context().Value("userEmail").(string)
+	rawEmail, ok := r.Context().Value("userEmail").(string)
+    if !ok || rawEmail == "" {
+        respondError(w, http.StatusUnauthorized, "Unauthorized")
+        return
+    }
 	userEmail = utils.NormalizeEmail(rawEmail)
 
 	// 3. POLICY CHECK: Validate against HR Entitlement
