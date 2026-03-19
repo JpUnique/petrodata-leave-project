@@ -99,12 +99,12 @@ func SeedStaffRecords(db *gorm.DB) {
 		{Name: "Ojo Philips Oluwaseun", StaffID: "M/05/07/2012/0050", Email: "seun.philips@petrodata.net", LeaveEntitlement: 22},
 		{Name: "Andie Moyan Oluwafemi", StaffID: "M/1/04/2013/0051", Email: "andie.moyan@petrodata.net", LeaveEntitlement: 22},
 		{Name: "Abiodun Anjorin", StaffID: "M/26/09/2024/0088", Email: "abiodun.anjorin@petrodata.net", LeaveEntitlement: 22},
-		{Name: "Rufus Michael-Aina", StaffID: "M/01/01/2016/0066", Email: "Rufus.Michael-Aina@petrodata.net", LeaveEntitlement: 22},
+		{Name: "Rufus Michael-Aina", StaffID: "M/01/01/2016/0066", Email: "rufus.michael-aina@petrodata.net", LeaveEntitlement: 22},
 		{Name: "Aniemene Ifeoma Queendaline", StaffID: "F/06/04/2010/0034", Email: "ifeoma.aniemene@petodata.net", LeaveEntitlement: 22},
 		{Name: "Olubodun Damilare Yomi", StaffID: "M/19/04/2012/0068", Email: "pooldrivers@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Sogade Babatunde Philip", StaffID: "M/03/03/2013/0055", Email: "pooldrivers@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Ebidero Joel Sunday", StaffID: "M/04/01/2021/0079", Email: "joel.ebidero@petrodata.net", LeaveEntitlement: 22},
-		{Name: "Samuel Michael-Aina", StaffID: "M/17/08/2021/0081", Email: "Samuel.Michael-Aina@petrodata.net", LeaveEntitlement: 20},
+		{Name: "Samuel Michael-Aina", StaffID: "M/17/08/2021/0081", Email: "samuel.michael-aina@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Mariam Abiola Olaleye", StaffID: "F/21/12/2021/0082", Email: "mariam.olaleye@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Cherechi Okparaugo", StaffID: "M/01/03/2022/0083", Email: "cherechi.okparaugo@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Oyabure Godwin Isaac", StaffID: "M/13/07/2022/0085", Email: "godwin.oyabure@petrodata.net", LeaveEntitlement: 20},
@@ -112,8 +112,8 @@ func SeedStaffRecords(db *gorm.DB) {
 		{Name: "Dada Adekoyejo", StaffID: "M/03/04/2023/0087", Email: "dada.adekoyejo@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Edem Joseph", StaffID: "M/01/04/2010/0033", Email: "joseph.edem@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Osu Moses Ikechukwu", StaffID: "M/01/12/2010/0035", Email: "moses.osu@petrodata.net", LeaveEntitlement: 20},
-		{Name: "Oguntonade Moboluwaduro", StaffID: "M/22/09/2025/0089", Email: "Moboluwaduro.oguntonade@petrodata.net", LeaveEntitlement: 20},
-		{Name: "Nwaekwu Chukwuebuka Johnpaul", StaffID: "04/M/1879/234", Email: "ITools@petrodata.net", LeaveEntitlement: 20},
+		{Name: "Oguntonade Moboluwaduro", StaffID: "M/22/09/2025/0089", Email: "moboluwaduro.oguntonade@petrodata.net", LeaveEntitlement: 20},
+		{Name: "Nwaekwu Chukwuebuka Johnpaul", StaffID: "04/M/1879/234", Email: "itools@petrodata.net", LeaveEntitlement: 20},
 	}
 
 	for _, staff := range staffList {

@@ -13,6 +13,7 @@ import (
 	"github.com/JpUnique/petrodata-leave-project/pkg/database"
 	"github.com/JpUnique/petrodata-leave-project/pkg/models"
 	"github.com/JpUnique/petrodata-leave-project/pkg/service"
+	"github.com/JpUnique/petrodata-leave-project/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -345,6 +346,9 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, ErrMalformedRequest)
 		return
 	}
+	rawEmail, _ := r.Context().Value("userEmail").(string)
+	userEmail = utils.NormalizeEmail(rawEmail)
+
 	// 3. POLICY CHECK: Validate against HR Entitlement
 	var policy models.StaffRecord
 	if err := database.DB.Where("email = ?", userEmail).First(&policy).Error; err != nil {
