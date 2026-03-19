@@ -331,8 +331,10 @@ body {
 .input-group input.has-value,
 .input-group select.has-value,
 .input-group textarea.has-value {
-  background: var(--color-white) !important;
-  color: var(--color-dark) !important;
+  background: var(
+    --color-input-bg
+  ) !important; /* Keep the dark transparent bg */
+  color: var(--color-text-primary) !important;
   border-color: var(--color-success);
 }
 

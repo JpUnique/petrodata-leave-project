@@ -93,8 +93,8 @@ document.addEventListener("DOMContentLoaded", () => {
       date_employed: dateEmployedInput ? dateEmployedInput.value : "", // NEW
       phone_number: phoneNumberInput ? phoneNumberInput.value : "", // NEW
       leave_allowance_request: allowanceToggle
-        ? allowanceToggle.checked
-        : false, // NEW (Boolean)
+        ? allowanceToggle.value === "true"
+        : false,
       leave_type: document.getElementById("leaveType").value,
       start_date: startDateInput.value,
       resumption_date: resumptionDateInput.value,
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Specifically for "Staff not in HR list"
         throw new Error(
           result.error ||
-            "Access Denied: You are not registered in the HR Leave Database.",
+            "Access Denied: You are not Valid for Leave contact HR.",
         );
       } else if (response.status === 401) {
         localStorage.removeItem(CONFIG.STORAGE.AUTH_TOKEN);
