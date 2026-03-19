@@ -79,7 +79,20 @@ function populateUI(data) {
     displayEnd: "resumption_date",
     displayRelief: "relief_staff",
     displayAddress: "contact_address",
+    displayAllowance: "leave_allowance_request",
   };
+
+  Object.entries(fieldMapping).forEach(([id, key]) => {
+    const el = getElement(id);
+    if (el) {
+      // Handle boolean for allowance display
+      if (key === "leave_allowance_request") {
+        el.textContent = data[key] ? "Yes" : "No";
+      } else {
+        el.textContent = data[key] || "N/A";
+      }
+    }
+  });
 
   Object.entries(fieldMapping).forEach(([id, key]) => {
     const el = getElement(id);
