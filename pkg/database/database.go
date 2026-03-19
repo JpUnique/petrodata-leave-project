@@ -33,6 +33,7 @@ func Connect() {
 	if err := migrateWithIndexes(db); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
+	SeedStaffRecords(db)
 
 	DB = db
 	log.Println("connected to the database and migrated successfully")
@@ -41,7 +42,7 @@ func Connect() {
 // migrateWithIndexes handles AutoMigrate + partial unique indexes for nullable tokens
 func migrateWithIndexes(db *gorm.DB) error {
 	log.Println("!!! Wiping database for testing and development!!!")
-	db.Exec("TRUNCATE TABLE users, leave_requests, approval_actions RESTART IDENTITY CASCADE")
+	db.Exec("TRUNCATE TABLE users, leave_requests, approval_actions staff_records RESTART IDENTITY CASCADE")
 
 	// Drop old problematic indexes (using your new naming convention)
 	indexesToDrop := []string{
@@ -100,7 +101,7 @@ func SeedStaffRecords(db *gorm.DB) {
 		{Name: "Andie Moyan Oluwafemi", StaffID: "M/1/04/2013/0051", Email: "andie.moyan@petrodata.net", LeaveEntitlement: 22},
 		{Name: "Abiodun Anjorin", StaffID: "M/26/09/2024/0088", Email: "abiodun.anjorin@petrodata.net", LeaveEntitlement: 22},
 		{Name: "Rufus Michael-Aina", StaffID: "M/01/01/2016/0066", Email: "rufus.michael-aina@petrodata.net", LeaveEntitlement: 22},
-		{Name: "Aniemene Ifeoma Queendaline", StaffID: "F/06/04/2010/0034", Email: "ifeoma.aniemene@petodata.net", LeaveEntitlement: 22},
+		{Name: "Aniemene Ifeoma Queendaline", StaffID: "F/06/04/2010/0034", Email: "ifeoma.aniemene@petrodata.net", LeaveEntitlement: 22},
 		{Name: "Olubodun Damilare Yomi", StaffID: "M/19/04/2012/0068", Email: "pooldrivers@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Sogade Babatunde Philip", StaffID: "M/03/03/2013/0055", Email: "pooldrivers@petrodata.net", LeaveEntitlement: 20},
 		{Name: "Ebidero Joel Sunday", StaffID: "M/04/01/2021/0079", Email: "joel.ebidero@petrodata.net", LeaveEntitlement: 22},

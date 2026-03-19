@@ -355,7 +355,7 @@ func SubmitLeaveRequest(w http.ResponseWriter, r *http.Request) {
 
 	// 3. POLICY CHECK: Validate against HR Entitlement
 	var policy models.StaffRecord
-	if err := database.DB.Where("email = ?", userEmail).First(&policy).Error; err != nil {
+	if err := database.DB.Where("email ILIKE ?", userEmail).First(&policy).Error; err != nil {
 		log.Printf("[WARN] Staff record not found for policy check: %s", userEmail)
 		respondError(w, http.StatusForbidden, "You are not valid for a Leave. Please contact HR.")
 		return
